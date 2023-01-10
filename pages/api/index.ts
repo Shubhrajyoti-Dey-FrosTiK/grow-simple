@@ -1,12 +1,12 @@
-import admin from "firebase-admin";
+import admin, { ServiceAccount } from "firebase-admin";
 import * as functions from "firebase-functions";
 
 import type { NextApiRequest, NextApiResponse } from "next";
-const serviceAccount = require("../../service.json");
+import { firebaseAdminConfig } from "../../firebase/admin";
 
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
+    credential: admin.credential.cert(firebaseAdminConfig as ServiceAccount),
   });
 }
 
