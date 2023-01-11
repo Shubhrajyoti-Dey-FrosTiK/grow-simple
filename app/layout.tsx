@@ -11,7 +11,7 @@ import "./globals.css";
 
 // Components
 import { Button } from "../components/components";
-import { googleSignIn } from "../firebase/auth";
+// import { googleSignIn } from "../firebase/auth";
 
 export const config = {
   runtime: "experimental-edge",
@@ -30,7 +30,7 @@ export default function RootLayout({
       <body>
         <ReduxProvider>
           <RootStyleRegistry>
-            <Button onClick={googleSignIn}>Login with GOOGLE</Button>
+            {/* <Button onClick={googleSignIn}>Login with GOOGLE</Button> */}
             {children}
           </RootStyleRegistry>
         </ReduxProvider>
