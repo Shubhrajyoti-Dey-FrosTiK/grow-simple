@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.20.7",
+    "@ducanh2912/next-pwa": "^7.2.0",
     "@emotion/react": "^11.10.5",
     "@emotion/server": "^11.10.0",
     "@mantine/core": "^5.9.5",
