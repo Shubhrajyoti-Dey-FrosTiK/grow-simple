@@ -38,6 +38,6 @@ next-env.d.ts
 # Firebase 
 service.json
 firebase.json
-
+firebaseClient.json
 
 .env
