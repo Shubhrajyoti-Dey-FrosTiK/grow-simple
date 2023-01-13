@@ -44,8 +44,8 @@ const WebcamCapture = () => {
             screenshotFormat="image/jpeg"
             videoConstraints={{
               ...videoConstraints,
+              facingMode,
             }}
-            facingMode
           />
           <button onClick={capture}>Capture photo</button>
         </>
