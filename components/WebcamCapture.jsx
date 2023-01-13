@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useCallback, useRef, useState } from "react";
 import Webcam from "react-webcam";
+import Image from "next/image";
 
 const FACING_MODE_USER = { exact: "user" };
 const FACING_MODE_ENVIRONMENT = { exact: "environment" };
@@ -9,47 +10,9 @@ const videoConstraints = {
 };
 
 const WebcamCapture = () => {
-  // const [deviceId, setDeviceId] = React.useState({});
-  // const [devices, setDevices] = React.useState([]);
+  const [facingMode, setFacingMode] = useState(FACING_MODE_USER);
 
-  // const handleDevices = React.useCallback(
-  //   (mediaDevices) =>
-  //     setDevices(mediaDevices.filter(({ kind }) => kind === "videoinput")),
-  //   [setDevices]
-  // );
-
-  // React.useEffect(() => {
-  //   navigator.mediaDevices.enumerateDevices().then(handleDevices);
-  // }, [handleDevices]);
-
-  // return (
-  //   <>
-  //     {devices.map((device, key) => (
-  //       <div key={device.label}>
-  //         <Webcam
-  //           audio={false}
-  //           videoConstraints={{ deviceId: device.deviceId }}
-  //         />
-  //         {device.label || `Device ${key + 1}`}
-  //       </div>
-  //     ))}
-  //   </>
-  // );
-
-  // const videoConstraints = {
-  //   facingMode: { exact: "environment" },
-  // };
-
-  // return (
-  //   <div>
-  //     Video Camera
-  //     <Webcam videoConstraints={videoConstraints} />
-  //   </div>
-  // );
-
-  const [facingMode, setFacingMode] = React.useState(FACING_MODE_USER);
-
-  const handleClick = React.useCallback(() => {
+  const handleClick = useCallback(() => {
     setFacingMode((prevState) =>
       prevState === FACING_MODE_USER
         ? FACING_MODE_ENVIRONMENT
@@ -57,18 +20,42 @@ const WebcamCapture = () => {
     );
   }, []);
 
+  const [img, setImg] = useState(null);
+  const webcamRef = useRef(null);
+
+  const capture = useCallback(() => {
+    const imageSrc = webcamRef.current.getScreenshot();
+    setImg(imageSrc);
+  }, [webcamRef]);
+
   return (
-    <>
+    <div className="container">
+      <br />
       <button onClick={handleClick}>Switch camera</button>
-      <Webcam
-        audio={false}
-        screenshotFormat="image/jpeg"
-        videoConstraints={{
-          ...videoConstraints,
-          facingMode,
-        }}
-      />
-    </>
+      {img === null ? (
+        <>
+          <Webcam
+            audio={false}
+            imageSmoothing={true}
+            mirrored={true}
+            height={400}
+            width={400}
+            ref={webcamRef}
+            screenshotFormat="image/jpeg"
+            videoConstraints={{
+              ...videoConstraints,
+            }}
+            facingMode
+          />
+          <button onClick={capture}>Capture photo</button>
+        </>
+      ) : (
+        <>
+          <Image src={img} alt="screenshot" />
+          <button onClick={() => setImg(null)}>Retake</button>
+        </>
+      )}
+    </div>
   );
 };
 
