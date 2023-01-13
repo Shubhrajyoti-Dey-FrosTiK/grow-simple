@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "rm -rf dist && next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "buildstart": "rm -rf dist && next build && next start"
   },
   "dependencies": {
     "@babel/core": "^7.20.7",
