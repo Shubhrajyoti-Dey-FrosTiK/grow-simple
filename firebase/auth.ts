@@ -1,5 +1,6 @@
 import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { auth, googleAuthProvider } from "./firebase";
+import axios from "axios";
 
 export const googleSignIn = () => {
   signInWithPopup(auth, googleAuthProvider)
@@ -21,4 +22,25 @@ export const googleSignIn = () => {
       const credential = GoogleAuthProvider.credentialFromError(error);
       // ...
     });
+};
+
+export const check = async () => {
+  console.log(await auth.currentUser?.getIdToken());
+
+  const response = await axios.post(
+    "http://localhost:5001/api/role/admin",
+    {
+      emailArray: ["toshubhrajyotidey@gmail.com"],
+    },
+    {
+      headers: {
+        idtoken: await auth.currentUser?.getIdToken(true),
+      },
+    }
+  );
+
+  console.log(response.data);
+  if (response.data.error) {
+    auth.signOut();
+  }
 };

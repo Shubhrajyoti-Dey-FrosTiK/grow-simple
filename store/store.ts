@@ -20,6 +20,7 @@ import {
 // Slices
 import counterSlice from "./states/counterSlice.js";
 import userSlice from "./states/userSlice.js";
+import pickDropSlice from "./states/pickDrop";
 
 const persistConfig = {
   key: "root",
@@ -30,6 +31,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   user: userSlice.reducer,
   counter: counterSlice.reducer,
+  form: pickDropSlice.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -10,6 +10,10 @@ if (!admin.apps.length) {
   });
 }
 
+// export const config = {
+//   runtime: "edge",
+// };
+
 const claim = {
   moderator: true,
   paid: true,
@@ -20,7 +24,8 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const user = await admin.auth().getUserByEmail("tosumandey77@gmail.com");
-  admin.auth().setCustomUserClaims(user.uid, claim);
+
+  // admin.auth().setCustomUserClaims(user.uid, claim);
   res.status(200).json(user);
 }
 
