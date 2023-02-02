@@ -6,6 +6,7 @@ import RootStyleRegistry from "./emotion";
 import ReduxProvider from "./redux";
 
 import "./globals.css";
+import "mapbox-gl/dist/mapbox-gl.css";
 
 // Firebase
 
@@ -14,11 +15,11 @@ import { Button } from "../components/components";
 import { googleSignIn } from "../firebase/auth";
 
 export const config = {
-  runtime: "experimental-edge",
+  runtime: "experimental-edge"
 };
 
 export default function RootLayout({
-  children,
+  children
 }: {
   children: React.ReactNode;
 }) {
@@ -139,7 +140,7 @@ export default function RootLayout({
         <ReduxProvider>
           <RootStyleRegistry>
             <div className="p-5">
-              <Button onClick={googleSignIn}>Login with GOOGLE</Button>
+              {/* <Button onClick={googleSignIn}>Login with GOOGLE</Button> */}
               {children}
             </div>
           </RootStyleRegistry>

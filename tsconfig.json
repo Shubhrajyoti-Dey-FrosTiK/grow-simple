@@ -25,10 +25,11 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "app/page.tsx",
+    "app/page.jsx",
     "components/input/TextInput.jsx",
     "store/states/userSlice.js",
-    "store/states/routeSlice.js"
+    "store/states/routeSlice.js",
+    "services/PickDrop.service.js"
   ],
   "exclude": ["node_modules"]
 }

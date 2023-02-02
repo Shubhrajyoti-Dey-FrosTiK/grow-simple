@@ -51,8 +51,6 @@ export default function FileInput({
   const dispatch = useDispatch();
   const ReduxPickDropContext = useSelector(selectPickDrop);
 
-  console.log(ReduxPickDropContext);
-
   const [data, setData] = useState<PickInterface | DropInterface>(
     pick ? { type: Options.PICK, data: [] } : { type: Options.DROP, data: [] }
   );
@@ -112,7 +110,6 @@ export default function FileInput({
       <Dropzone
         openRef={openRef}
         onDrop={(files) => handleChange(files)}
-        onReject={(files) => console.log("rejected files", files)}
         maxSize={3 * 1024 ** 2}
         accept={[MIME_TYPES.xlsx]}
       >
