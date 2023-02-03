@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import RootStyleRegistry from "./emotion";
+import { WASMContextProvider } from "../wasmContext.tsx";
 
 // Redux
 import ReduxProvider from "./redux";
@@ -15,11 +16,11 @@ import { Button } from "../components/components";
 import { googleSignIn } from "../firebase/auth";
 
 export const config = {
-  runtime: "experimental-edge"
+  runtime: "experimental-edge",
 };
 
 export default function RootLayout({
-  children
+  children,
 }: {
   children: React.ReactNode;
 }) {
@@ -139,10 +140,12 @@ export default function RootLayout({
       <body>
         <ReduxProvider>
           <RootStyleRegistry>
-            <div className="p-5">
-              {/* <Button onClick={googleSignIn}>Login with GOOGLE</Button> */}
-              {children}
-            </div>
+            <WASMContextProvider>
+              <div className="p-5">
+                {/* <Button onClick={googleSignIn}>Login with GOOGLE</Button> */}
+                {children}
+              </div>
+            </WASMContextProvider>
           </RootStyleRegistry>
         </ReduxProvider>
       </body>
