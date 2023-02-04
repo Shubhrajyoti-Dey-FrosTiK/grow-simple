@@ -30,6 +30,7 @@
     "eslint-config-next": "13.1.0",
     "firebase": "^9.13.0",
     "firebase-admin": "^11.4.1",
+    "geolib": "^3.3.3",
     "json-and-xlsx": "^2.1.2",
     "mantine-datatable": "^1.7.38",
     "mapbox-gl": "^2.12.0",

@@ -16,7 +16,12 @@ import { selectPickDrop } from "../store/states/pickDrop";
 // Services
 import { PickDropService } from "../services/PickDrop.service";
 import PlottingService from "../services/Plotting.service";
+import SimulationService from "../services/Simulation.service";
+import PathService from "../services/Path.service";
 import axios from "axios";
+
+// Components
+import Path from "../components/map/Path";
 
 export default function Home() {
   // const { user, isSignedIn } = useAuth();
@@ -24,13 +29,16 @@ export default function Home() {
   const ReduxPickDropContext = useSelector(selectPickDrop);
   const pds = new PickDropService();
   const plot = new PlottingService();
+  const simulate = new SimulationService();
+  const ps = new PathService();
 
   const mapContainer = useRef(null);
   const map = useRef(null);
 
   const [noOfDeliveryBoys, setNoOfDeliveryBoys] = useState(3);
   const [originGeoInfo, setOriginGeoInfo] = useState(3);
-  const [destGeoInfo, setDestGeoInfo] = useState(3);
+  const [time, setTime] = useState(0);
+  const [pathArray, setPathArray] = useState([]);
 
   const tempHub = {
     latitude: 12.972442,
@@ -78,11 +86,14 @@ export default function Home() {
     ],
   ];
 
+  const handlePlotPath = async (path, index, pathSteps, roadPoints) => {
+    const tempPathSteps = await plot.route(map, [...path], index + 1);
+    pathSteps.push(tempPathSteps);
+    roadPoints.push(ps.roadPoints(path, tempPathSteps.steps));
+  };
+
   const handleExtract = async () => {
-    const combinedData = pds.combine(
-      ReduxPickDropContext.pickupPoints,
-      ReduxPickDropContext.dropPoints
-    );
+    setPathArray([]);
 
     // SET OF ORIGINS / PICKUPS
     const origin = [
@@ -113,25 +124,35 @@ export default function Home() {
       zoom: 11,
     });
 
+    // This will plot the markers
     plot.points(
       map,
       [tempHub, ...originGeoInfo, ...destGeoInfo],
       originGeoInfo.length
     );
 
-    console.log([tempHub, ...originGeoInfo, ...destGeoInfo]);
+    plot.setTraffic(map);
 
     const distanceMatrix = await pds.batchDistanceMatrix(
       originGeoInfo,
       destGeoInfo
     );
 
+    // This will store the geometry and legs of all the routes
     const pathSteps = [];
-    paths.forEach((path, index) => {
-      pathSteps.push(plot.route(map, [...path], index + 1));
-    });
 
-    console.log(distanceMatrix, pathSteps);
+    // This will store the road version of the origin destination points
+    const roadPoints = [];
+
+    await Promise.all(
+      paths.map(
+        async (path, index) =>
+          await handlePlotPath(path, index, pathSteps, roadPoints)
+      )
+    );
+    setPathArray(pathSteps);
+
+    setTime(ps.calculateNDeliveryTime(roadPoints, 1).duration);
   };
 
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -162,6 +183,10 @@ export default function Home() {
         </div>
         <Button onClick={handleExtract}>Extract Data</Button>
         <div ref={mapContainer} className="map-container h-[50vh]"></div>
+        {pathArray.length &&
+          pathArray.map((path, pathIndex) => {
+            return <Path key={`Path_${pathIndex}`} path={path} map={map} />;
+          })}
       </div>
     </main>
   );

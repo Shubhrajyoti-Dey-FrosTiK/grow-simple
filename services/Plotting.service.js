@@ -33,7 +33,6 @@ export default class PlottingService {
           .setLngLat([pathPoint.longitude, pathPoint.latitude])
           .addTo(map.current);
 
-      //   map.current.on("load", () => {
       //     map.current.addLayer({
       //       id: `waypoint-${index + 1}`,
       //       type: "circle",
@@ -60,12 +59,13 @@ export default class PlottingService {
       //     });
       //   });
     });
-
-    // this.route(map, riderPath);
   }
 
-  async location(map, latitude, longitude) {
-    new mapboxgl.Marker(element)
+  async pathPinPoint(map, latitude, longitude, prevMarker) {
+    if (prevMarker) prevMarker.remove();
+    const element = document.createElement("div");
+    element.classList.add("truck");
+    return new mapboxgl.Marker(element)
       .setLngLat([longitude, latitude])
       .setPopup(
         new mapboxgl.Popup({ offset: 25 }) // add popups
@@ -74,7 +74,7 @@ export default class PlottingService {
       .addTo(map.current);
   }
 
-  async getRoute(riderPath, route, steps) {
+  async getRoute(riderPath, route, steps, details) {
     let pointsArray = [];
 
     // Joining the latitude and longitude
@@ -82,7 +82,7 @@ export default class PlottingService {
       pointsArray.push(`${point.longitude},${point.latitude}`)
     );
 
-    const URL = `https://api.mapbox.com/directions/v5/mapbox/driving/${pointsArray.join(
+    const URL = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${pointsArray.join(
       ";"
     )}?alternatives=true&geometries=geojson&language=en&overview=simplified&steps=true&access_token=${
       mapboxgl.accessToken
@@ -90,8 +90,13 @@ export default class PlottingService {
 
     const query = await fetch(URL, { method: "GET" });
     const json = await query.json();
-    const data = json.routes[0];
 
+    // Change the details
+    details.duration += json.routes[0].duration;
+    details.distance += json.routes[0].distance;
+
+    // Capture the path
+    const data = json.routes[0];
     data.geometry.coordinates.forEach((coordinate) => route.push(coordinate));
     data.legs[0].steps.forEach((step) => steps.push(step));
   }
@@ -101,9 +106,13 @@ export default class PlottingService {
     const batchRiderPath = this.splitToChunks([...riderPath], 24);
     const route = [];
     const steps = [];
+    const details = {
+      distance: 0,
+      duration: 0,
+    };
 
     await Promise.all(
-      batchRiderPath.map((path) => this.getRoute(path, route, steps))
+      batchRiderPath.map((path) => this.getRoute(path, route, steps, details))
     );
 
     const geojson = {
@@ -115,7 +124,6 @@ export default class PlottingService {
       },
     };
 
-    console.log(steps, route, riderPath, geojson);
     if (map.current.getSource(`route-${routeNo}`)) {
       map.current.getSource(`route-${routeNo}`).setData(geojson);
     } else {
@@ -132,12 +140,41 @@ export default class PlottingService {
         },
         paint: {
           "line-color": "#3887be",
-          "line-width": 3,
-          "line-opacity": 1,
+          "line-width": 5,
+          "line-opacity": 0.6,
         },
       });
     }
 
-    return steps;
+    return { steps, route, details };
+  }
+
+  setTraffic(map) {
+    map.current.on("load", () => {
+      map.current.addLayer({
+        id: "traffic",
+        type: "line",
+        source: {
+          url: "mapbox://mapbox.mapbox-traffic-v1",
+          type: "vector",
+        },
+        "source-layer": "traffic",
+        paint: {
+          "line-width": 1.5,
+          "line-color": [
+            "case",
+            ["==", "low", ["get", "congestion"]],
+            "#aab7ef",
+            ["==", "moderate", ["get", "congestion"]],
+            "#4264fb",
+            ["==", "heavy", ["get", "congestion"]],
+            "#ee4e8b",
+            ["==", "severe", ["get", "congestion"]],
+            "#b43b71",
+            "#000000",
+          ],
+        },
+      });
+    });
   }
 }
