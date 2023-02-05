@@ -2,11 +2,8 @@
 import mapboxgl from "!mapbox-gl";
 
 const getAngleRadians = (point1, point2) => {
-  return Math.atan2(
-    Math.abs(
-      (point1.longitude - point2.longitude) /
-        (point1.latitude - point2.latitude)
-    )
+  return Math.atan(
+    (point1.longitude - point2.longitude) / (point1.latitude - point2.latitude)
   );
 };
 
@@ -80,14 +77,14 @@ export default class PlottingService {
     const element = document.createElement("div");
     element.classList.add("truck");
 
-    // element.style.transform = `rotate(${getAngleDegrees(
-    //   { latitude, longitude },
-    //   goToCoordinate
-    // )}deg)`;
+    const inclination = getAngleDegrees(
+      { latitude, longitude },
+      goToCoordinate
+    );
 
-    // element.style.transform = `rotate(90deg)`;
+    console.log(inclination);
 
-    return new mapboxgl.Marker(element)
+    return new mapboxgl.Marker({ element, rotation: inclination })
       .setLngLat([longitude, latitude])
       .setPopup(
         new mapboxgl.Popup({ offset: 25 }) // add popups
