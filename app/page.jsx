@@ -55,9 +55,21 @@ export default function Home() {
         longitude: 77.5855952,
         latitude: 12.9128212,
       },
+    ],
+    [
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
       {
         longitude: 77.5855952,
         latitude: 12.9128212,
+      },
+    ],
+    [
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
       },
       {
         longitude: 77.5816906,
@@ -70,14 +82,14 @@ export default function Home() {
         longitude: 77.580643,
       },
       {
-        longitude: 77.5454111,
-        latitude: 12.9414398,
+        longitude: 77.577034,
+        latitude: 12.9033477,
       },
     ],
     [
       {
-        longitude: 77.577034,
-        latitude: 12.9033477,
+        latitude: 12.972442,
+        longitude: 77.580643,
       },
       {
         longitude: 77.5454111,
@@ -150,9 +162,21 @@ export default function Home() {
           await handlePlotPath(path, index, pathSteps, roadPoints)
       )
     );
-    setPathArray(pathSteps);
 
-    setTime(ps.calculateNDeliveryTime(roadPoints, 1).duration);
+    // console.log(pathSteps);
+    // setPathArray(pathSteps);
+
+    const nthDeliveryTime = ps.calculateNDeliveryTime(roadPoints, 2).duration;
+    setTime(nthDeliveryTime);
+    const filteredDeliveryRouteForNDeliveries = ps.filterNDeliveries(
+      pathSteps,
+      nthDeliveryTime
+    );
+    const smoothCoordinates = ps.smoothenCoordinates(
+      filteredDeliveryRouteForNDeliveries,
+      nthDeliveryTime
+    );
+    setPathArray(smoothCoordinates);
   };
 
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;

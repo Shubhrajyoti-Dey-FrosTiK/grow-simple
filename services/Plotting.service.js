@@ -1,6 +1,19 @@
 // Map
 import mapboxgl from "!mapbox-gl";
 
+const getAngleRadians = (point1, point2) => {
+  return Math.atan2(
+    Math.abs(
+      (point1.longitude - point2.longitude) /
+        (point1.latitude - point2.latitude)
+    )
+  );
+};
+
+const getAngleDegrees = (point1, point2) => {
+  return getAngleRadians(point1, point2) * (180 / Math.PI);
+};
+
 export default class PlottingService {
   // FOR SPLITTING ARRAY INTO N PIECES (Rate limiter)
   splitToChunks(array, pieceLen) {
@@ -61,10 +74,19 @@ export default class PlottingService {
     });
   }
 
-  async pathPinPoint(map, latitude, longitude, prevMarker) {
+  async pathPinPoint(map, latitude, longitude, goToCoordinate, prevMarker) {
     if (prevMarker) prevMarker.remove();
+    // Create the car icon
     const element = document.createElement("div");
     element.classList.add("truck");
+
+    // element.style.transform = `rotate(${getAngleDegrees(
+    //   { latitude, longitude },
+    //   goToCoordinate
+    // )}deg)`;
+
+    // element.style.transform = `rotate(90deg)`;
+
     return new mapboxgl.Marker(element)
       .setLngLat([longitude, latitude])
       .setPopup(

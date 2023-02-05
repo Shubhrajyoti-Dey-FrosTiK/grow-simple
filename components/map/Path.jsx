@@ -18,18 +18,22 @@ function Path({ path, map }) {
   const plotOnMap = async () => {
     const tempMarker = await plot.pathPinPoint(
       map,
-      path.route[index][1],
-      path.route[index][0],
+      path[index].latitude,
+      path[index].longitude,
+      {
+        latitude: path[index + (index == path.length - 1 ? 0 : 1)].latitude,
+        longitude: path[index + (index == path.length - 1 ? 0 : 1)].longitude,
+      },
       marker
     );
-    await sleep(1000);
+    // await sleep(1000);
     setMarker(tempMarker);
     setIndex(index + 1);
   };
 
   useEffect(() => {
     console.log("Hellooo");
-    if (index >= path.route.length) return;
+    if (index >= path.length) return;
     plotOnMap();
   }, [index]);
 
