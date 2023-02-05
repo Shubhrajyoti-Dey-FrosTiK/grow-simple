@@ -1,6 +1,6 @@
 "use client";
 
-import { Button, Typography } from "../components/components";
+import { Button, TextInput, Typography } from "../components/components";
 import DisplayCSV from "../components/displayCSV";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../firebase/useAuth";
@@ -108,17 +108,10 @@ export default function Home() {
     setPathArray([]);
 
     // SET OF ORIGINS / PICKUPS
-    const origin = [
-      ReduxPickDropContext.pickupPoints[0],
-      ReduxPickDropContext.pickupPoints[1],
-      ReduxPickDropContext.pickupPoints[2],
-    ];
+    const origin = ReduxPickDropContext.pickupPoints;
 
     // SET OF DESTINATIONS / DROPS
-    const dest = [
-      ReduxPickDropContext.dropPoints[0],
-      ReduxPickDropContext.dropPoints[1],
-    ];
+    const dest = ReduxPickDropContext.dropPoints;
 
     const { originGeoInfo, destGeoInfo, hubGeoInfo } =
       await pds.batchGeoCoordinates(origin, dest);
@@ -126,7 +119,7 @@ export default function Home() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: [originGeoInfo[0].longitude, originGeoInfo[0].latitude],
+      center: ps.getAverageCoordinates(originGeoInfo, destGeoInfo),
       zoom: 11,
     });
 
@@ -144,7 +137,17 @@ export default function Home() {
       destGeoInfo
     );
 
-    handleDeliveries();
+    const pathSteps = [];
+
+    // This will store the road version of the origin destination points
+    const roadPoints = [];
+
+    await Promise.all(
+      paths.map(
+        async (path, index) =>
+          await handlePlotPath(path, index, pathSteps, roadPoints)
+      )
+    );
   };
 
   const handleDeliveries = async () => {
@@ -184,7 +187,7 @@ export default function Home() {
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
-      center: [77.5946, 12.9716],
+      center: [10, 10],
       zoom: 10,
     });
   });
@@ -217,6 +220,7 @@ export default function Home() {
             );
           })}
       </div>
+      <TextInput type="number" />
     </main>
   );
 }

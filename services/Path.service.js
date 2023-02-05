@@ -245,4 +245,21 @@ export default class PathService {
     console.log(smoothCoordinates);
     return smoothCoordinates;
   }
+
+  getAverageCoordinates(origin, dest) {
+    let lat = 0;
+    let lng = 0;
+
+    origin.forEach((p) => {
+      lat += p.latitude;
+      lng += p.longitude;
+    });
+    dest.forEach((p) => {
+      lat += p.latitude;
+      lng += p.longitude;
+    });
+
+    const len = origin.length + dest.length;
+    return [lng / len, lat / len];
+  }
 }
