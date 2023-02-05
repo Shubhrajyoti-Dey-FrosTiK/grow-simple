@@ -71,7 +71,14 @@ export default class PlottingService {
     });
   }
 
-  async pathPinPoint(map, latitude, longitude, goToCoordinate, prevMarker) {
+  async pathPinPoint(
+    map,
+    latitude,
+    longitude,
+    goToCoordinate,
+    prevMarker,
+    pathIndex
+  ) {
     if (prevMarker) prevMarker.remove();
     // Create the car icon
     const element = document.createElement("div");
@@ -84,13 +91,18 @@ export default class PlottingService {
 
     console.log(inclination);
 
-    return new mapboxgl.Marker({ element, rotation: inclination })
+    const tempMarker = new mapboxgl.Marker({ element, rotation: inclination })
       .setLngLat([longitude, latitude])
       .setPopup(
         new mapboxgl.Popup({ offset: 25 }) // add popups
-          .setHTML(`<h1>Truck 1</h1>`)
-      )
-      .addTo(map.current);
+          .setHTML(
+            `<h2 style="color: black; margin-bottom: 5px;"><b>Driver ${pathIndex}</b></h2><h2 style="color: black;">Lat: ${latitude}</h2><h2 style="color: black;">Lon: ${longitude}</h2>`
+          )
+      );
+
+    if (prevMarker) tempMarker.addTo(map.current);
+
+    return tempMarker;
   }
 
   async getRoute(riderPath, route, steps, details) {

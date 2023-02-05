@@ -5,7 +5,7 @@ import PlottingService from "../../services/Plotting.service";
 // Img
 import Truck from "../../assets/truck.png";
 
-function Path({ path, map }) {
+function Path({ path, map, pathIndex }) {
   const plot = new PlottingService();
   const element = useRef(null);
   const [marker, setMarker] = useState();
@@ -24,7 +24,8 @@ function Path({ path, map }) {
         latitude: path[index + (index == path.length - 1 ? 0 : 1)].latitude,
         longitude: path[index + (index == path.length - 1 ? 0 : 1)].longitude,
       },
-      marker
+      marker,
+      pathIndex
     );
     // await sleep(1000);
     setMarker(tempMarker);

@@ -123,12 +123,6 @@ export default function Home() {
     const { originGeoInfo, destGeoInfo, hubGeoInfo } =
       await pds.batchGeoCoordinates(origin, dest);
 
-    console.log({
-      originGeoInfo,
-      destGeoInfo,
-      hubGeoInfo,
-    });
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: "mapbox://styles/mapbox/streets-v12",
@@ -150,6 +144,10 @@ export default function Home() {
       destGeoInfo
     );
 
+    handleDeliveries();
+  };
+
+  const handleDeliveries = async () => {
     // This will store the geometry and legs of all the routes
     const pathSteps = [];
 
@@ -209,7 +207,14 @@ export default function Home() {
         <div ref={mapContainer} className="map-container h-[50vh]"></div>
         {pathArray.length &&
           pathArray.map((path, pathIndex) => {
-            return <Path key={`Path_${pathIndex}`} path={path} map={map} />;
+            return (
+              <Path
+                key={`Path_${pathIndex}`}
+                path={path}
+                map={map}
+                pathIndex={pathIndex + 1}
+              />
+            );
           })}
       </div>
     </main>
