@@ -43,6 +43,33 @@ export default function Home() {
   const [simulateDeliveries, setSimulateDeliveries] = useState(1);
   const [pathCovered, setPathCovered] = useState([]);
   const [lastPoints, setLastPoints] = useState([]);
+  const [prevPickupPoints, setPrevPickupPoints] = useState([]);
+
+  useEffect(() => {
+    setPrevPickupPoints(ReduxPickDropContext.pickupPoints);
+  }, [ReduxPickDropContext.pickupPoints])
+
+  // Function to handle data to be passed to the banckend at the end of a simulation leg
+  const returnDataToBackend = async () => {
+    // Array of boolean variables
+    let riderPresent = [];      
+    // Current locations of all the active drivers
+    let riderLocations = [];
+
+    lastPoints.forEach((point) => {
+      if (point) {
+        riderPresent.push(true);
+        riderLocations.push(point);
+      }
+      else {
+        riderPresent.push(false);
+      }
+    });
+
+    // Stiched distance matrix of all the driver locations X the new drop points
+    const distanceMatrix = await pds.batchDistanceMatrix(riderLocations, [...ReduxPickDropContext.pickupPoints, ...prevPickupPoints])
+    return [riderPresent, riderLocations, distanceMatrix];
+  }
 
   const tempHub = {
     latitude: 12.972442,
