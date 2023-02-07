@@ -89,8 +89,6 @@ export default class PlottingService {
       goToCoordinate
     );
 
-    console.log(inclination);
-
     const tempMarker = new mapboxgl.Marker({ element, rotation: inclination })
       .setLngLat([longitude, latitude])
       .setPopup(
@@ -108,6 +106,8 @@ export default class PlottingService {
   async getRoute(riderPath, route, steps, details) {
     let pointsArray = [];
 
+    if (riderPath.length < 2) return;
+
     // Joining the latitude and longitude
     riderPath.forEach((point) =>
       pointsArray.push(`${point.longitude},${point.latitude}`)
@@ -122,6 +122,8 @@ export default class PlottingService {
     const query = await fetch(URL, { method: "GET" });
     const json = await query.json();
 
+    console.log(json);
+
     // Change the details
     details.duration += json.routes[0].duration;
     details.distance += json.routes[0].distance;
@@ -133,7 +135,7 @@ export default class PlottingService {
   }
 
   // Plot the routes
-  async route(map, riderPath, routeNo) {
+  async route(map, riderPath, routeNo, plotRoute) {
     const batchRiderPath = this.splitToChunks([...riderPath], 24);
     const route = [];
     const steps = [];
@@ -155,26 +157,28 @@ export default class PlottingService {
       },
     };
 
-    if (map.current.getSource(`route-${routeNo}`)) {
-      map.current.getSource(`route-${routeNo}`).setData(geojson);
-    } else {
-      map.current.addLayer({
-        id: `route-${routeNo}`,
-        type: "line",
-        source: {
-          type: "geojson",
-          data: geojson,
-        },
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
-        },
-        paint: {
-          "line-color": "#3887be",
-          "line-width": 5,
-          "line-opacity": 0.6,
-        },
-      });
+    if (plotRoute) {
+      if (map.current.getSource(`route-${routeNo}`)) {
+        map.current.getSource(`route-${routeNo}`).setData(geojson);
+      } else {
+        map.current.addLayer({
+          id: `route-${routeNo}`,
+          type: "line",
+          source: {
+            type: "geojson",
+            data: geojson,
+          },
+          layout: {
+            "line-join": "round",
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": "#3887be",
+            "line-width": 5,
+            "line-opacity": 0.6,
+          },
+        });
+      }
     }
 
     return { steps, route, details };

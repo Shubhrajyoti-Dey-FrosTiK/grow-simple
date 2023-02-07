@@ -70,8 +70,6 @@ export default class PathService {
       return 0;
     });
 
-    console.log(completeRoadPointsArray);
-
     return completeRoadPointsArray[n - 1];
   }
 
@@ -104,11 +102,8 @@ export default class PathService {
   // StepInfo -> Array<Path> -> Path -> Array<Steps> -> Step -> Array<Coordinates>
 
   filterNDeliveries(stepsInfo, time) {
-    console.log(time);
     // First we need to create an array of all the coordinates of a path along with time
     const coordinatesArray = [];
-
-    console.log(stepsInfo);
 
     stepsInfo.forEach((path) => {
       const pathCoordinates = [];
@@ -242,8 +237,77 @@ export default class PathService {
       smoothCoordinates.push(coordinates);
     });
 
-    console.log(smoothCoordinates);
     return smoothCoordinates;
+  }
+
+  getPointsToBeCovered(roadPointsArray, normalPath, nthTime, pathCovered) {
+    const pointsToBeCoveredArray = [...pathCovered];
+    const pointsLen = pointsToBeCoveredArray.length;
+
+    // Prepare
+    if (pointsLen < roadPointsArray.length) {
+      for (let i = 0; i < roadPointsArray.length - pointsLen; i++) {
+        pointsToBeCoveredArray.push([]);
+      }
+    }
+
+    // At this point pointsToBeCoveredArray will have Array<Array<Coordinate>> or just Array of p empty arrays
+
+    // Taking a copy to snapshot the state Length
+    const lenOfPathToBeCovered = [];
+
+    pointsToBeCoveredArray.forEach((path) =>
+      lenOfPathToBeCovered.push(path.length)
+    );
+
+    // Populate
+    for (let pathIndex = 0; pathIndex < roadPointsArray.length; pathIndex++) {
+      // for (
+      //   let stepIndex = 0;
+      //   stepIndex < roadPointsArray[pathIndex].length;
+      //   stepIndex++
+      // ) {
+      //   if (roadPointsArray[pathIndex][stepIndex].duration <= nthTime) {
+      //     pointsToBeCoveredArray[pathIndex].push(
+      //       normalPath[pathIndex][stepIndex]
+      //     );
+      //   } else break;
+      // }
+
+      if (
+        pointsToBeCoveredArray[pathIndex].length < normalPath[pathIndex].length
+      ) {
+        // Coming inside this point means that there is still some points to cover
+        let startIndex = 0;
+
+        // If there already exists some path before then we need to omit the first point as that point will be the point after n deliveries
+        if (pointsToBeCoveredArray[pathIndex].length) startIndex++;
+
+        // Now we need to iterate over roadPointsArray to check which points to include in this n deliveries
+        // We need to understand that roadPointsArray is the point on the road. So we need to take the normalPath point of the roadPoint in order to maintain uniformity over API calls
+
+        for (
+          let stepIndex = startIndex;
+          stepIndex < roadPointsArray[pathIndex].length;
+          stepIndex++
+        ) {
+          if (roadPointsArray[pathIndex][stepIndex].duration <= nthTime) {
+            // This means that this point will be covered in this simulation. So add this to points to be covered
+            pointsToBeCoveredArray[pathIndex].push(
+              normalPath[pathIndex][
+                lenOfPathToBeCovered[pathIndex] + stepIndex - startIndex
+              ]
+            );
+          }
+
+          // Here we have done copyOfPointsToBeCoveredArray[pathIndex].length + stepIndex in order to maintain the index
+          // copyOfPointsToBeCoveredArray will have the covered points in the last simulation
+          // If this is the first simulation  then length will be zero thus not affecting the index
+        }
+      }
+    }
+
+    return pointsToBeCoveredArray;
   }
 
   getAverageCoordinates(origin, dest) {

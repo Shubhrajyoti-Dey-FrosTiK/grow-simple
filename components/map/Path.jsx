@@ -4,10 +4,13 @@ import PlottingService from "../../services/Plotting.service";
 
 // Img
 import Truck from "../../assets/truck.png";
+import { useSelector } from "react-redux";
+import { selectSimulation } from "../../store/states/simulation";
 
 function Path({ path, map, pathIndex }) {
   const plot = new PlottingService();
   const element = useRef(null);
+  const play = useSelector(selectSimulation);
   const [marker, setMarker] = useState();
   const [index, setIndex] = useState(0);
 
@@ -33,12 +36,15 @@ function Path({ path, map, pathIndex }) {
   };
 
   useEffect(() => {
-    console.log("Hellooo");
     if (index >= path.length) return;
     plotOnMap();
   }, [index]);
 
-  return <div ref={element} className="truck"></div>;
+  useEffect(() => {
+    setIndex(0);
+  }, [path]);
+
+  return <></>;
 }
 
 export default Path;

@@ -18,7 +18,7 @@ import {
 } from "redux-persist";
 
 // Slices
-import counterSlice from "./states/counterSlice.js";
+import simulationSlice from "./states/simulation.js";
 import userSlice from "./states/userSlice.js";
 import pickDropSlice from "./states/pickDrop";
 
@@ -30,7 +30,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   user: userSlice.reducer,
-  counter: counterSlice.reducer,
+  simulation: simulationSlice.reducer,
   form: pickDropSlice.reducer,
 });
 

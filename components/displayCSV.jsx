@@ -11,7 +11,6 @@ export default function DisplayCSV({ csv, pickup }) {
   const [records, setRecords] = useState(csv.slice(0, PAGE_SIZE));
 
   useEffect(() => {
-    console.log("Hello");
     setRecords(csv.slice(0, PAGE_SIZE));
   }, [csv]);
 
