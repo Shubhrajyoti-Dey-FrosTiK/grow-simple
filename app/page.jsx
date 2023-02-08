@@ -327,8 +327,6 @@ export default function Home() {
         tempPath.push(paths[pathIndex][tempIndex + 1]);
       }
 
-      console.log(newPathForNextSimulation);
-
       newPathForNextSimulation.push(tempPath);
     }
 
@@ -375,16 +373,12 @@ export default function Home() {
       originGeoInfo.length
     );
 
-    console.log([tempHub, ...originGeoInfo, ...destGeoInfo]);
-
     plot.setTraffic(map);
 
     const { distanceMatrix, timeMatrix } = await pds.batchDistanceMatrix(
       tempOriginState,
       tempOriginState
     );
-
-    console.log(originGeoInfo, tempOriginState, paths);
 
     initialRequest(distanceMatrix, timeMatrix, originGeoInfo, tempOriginState);
 
@@ -612,8 +606,6 @@ export default function Home() {
         // tempPath.push(roadPoints[pathIndex][tempIndex]);
         tempPath.push(paths[pathIndex][tempIndex + 1]);
       }
-
-      console.log(newPathForNextSimulation);
 
       newPathForNextSimulation.push(tempPath);
     }

@@ -80,7 +80,6 @@ export default class PlottingService {
         smoothCoordinates[i][0].latitude == latitude &&
         smoothCoordinates[i][0].longitude == longitude
       ) {
-        console.log("Hello");
         found = true;
         break;
       }

@@ -57,7 +57,6 @@ export default class PathService {
   }
 
   async calculateNDeliveryTime(roadPointsArray, newPathArray, n) {
-    console.log(roadPointsArray);
     let completeRoadPointsArray = [];
     roadPointsArray.forEach((roadPoints, pathIndex) => {
       if (newPathArray[pathIndex].length > 1)
@@ -70,7 +69,6 @@ export default class PathService {
       return 0;
     });
 
-    console.log(completeRoadPointsArray);
     return completeRoadPointsArray[n - 1];
   }
 
