@@ -179,7 +179,7 @@ export class PickDropService {
             dest,
             distanceMatrix,
             timeMatrix,
-            index * LIMIT.DISTANCE_MATRIX
+            Math.floor(index * (LIMIT.DISTANCE_MATRIX / originGeoInfo.length))
           )
       )
     );
