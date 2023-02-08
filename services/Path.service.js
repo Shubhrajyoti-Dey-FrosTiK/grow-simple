@@ -55,13 +55,10 @@ export default class PathService {
     return roadPointsArray;
   }
 
-  calculateNDeliveryTime(roadPointsArray, n) {
+  async calculateNDeliveryTime(roadPointsArray, n) {
     let completeRoadPointsArray = [];
-    roadPointsArray.forEach((roadPoints, index) => {
-      completeRoadPointsArray = [
-        ...completeRoadPointsArray,
-        ...[...roadPoints].slice(1),
-      ];
+    roadPointsArray.forEach((roadPoints) => {
+      completeRoadPointsArray = [...completeRoadPointsArray, ...roadPoints];
     });
 
     completeRoadPointsArray.sort((a, b) => {
@@ -69,6 +66,8 @@ export default class PathService {
       if (a.duration > b.duration) return 1;
       return 0;
     });
+
+    console.log(completeRoadPointsArray);
 
     return completeRoadPointsArray[n - 1];
   }
@@ -209,7 +208,7 @@ export default class PathService {
     return coordinatesArray;
   }
 
-  smoothenCoordinates(nCoordinatesArray, time) {
+  async smoothenCoordinates(nCoordinatesArray, time) {
     const smoothCoordinates = [];
     nCoordinatesArray.forEach((coordinatesArray) => {
       let coordinates = [];

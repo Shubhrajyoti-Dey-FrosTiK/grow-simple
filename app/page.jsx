@@ -16,8 +16,10 @@ import { selectPickDrop } from "../store/states/pickDrop";
 // Services
 import { PickDropService } from "../services/PickDrop.service";
 import PlottingService from "../services/Plotting.service";
+import OptimizedPlottingService from "../services/Optimized.Plotting.service";
 import SimulationService from "../services/Simulation.service";
 import PathService from "../services/Path.service";
+import OptimizedPathService from "../services/Optimized.Path.service";
 import axios from "axios";
 
 // Components
@@ -30,6 +32,8 @@ export default function Home() {
   const ReduxPickDropContext = useSelector(selectPickDrop);
   const pds = new PickDropService();
   const plot = new PlottingService();
+  const OPS = new OptimizedPathService();
+  const PLOTTER = new OptimizedPlottingService();
   const simulate = new SimulationService();
   const ps = new PathService();
 
@@ -42,88 +46,65 @@ export default function Home() {
   const [deliveryCount, setDeliveryCount] = useState(0);
   const [simulateDeliveries, setSimulateDeliveries] = useState(1);
   const [pathCovered, setPathCovered] = useState([]);
-  const [lastPoints, setLastPoints] = useState([]);
+  // const [roadSteps, setRoadSteps] = useState([]);
 
   const tempHub = {
     latitude: 12.972442,
     longitude: 77.580643,
   };
 
-  const paths = [
+  const [paths, setPaths] = useState([
     [
       {
         latitude: 12.972442,
         longitude: 77.580643,
       },
-      {
-        longitude: 77.5855952,
-        latitude: 12.9128212,
-      },
-      {
-        longitude: 77.5855952,
-        latitude: 12.9128212,
-      },
+
       {
         longitude: 77.5816906,
         latitude: 12.8927062,
       },
-      {
-        longitude: 77.5855952,
-        latitude: 12.9128212,
-      },
-      {
-        longitude: 77.58592415,
-        latitude: 12.89807825,
-      },
-      {
-        longitude: 77.577034,
-        latitude: 12.9033477,
-      },
-      {
-        longitude: 77.5454111,
-        latitude: 12.9414398,
-      },
     ],
     [
       {
         latitude: 12.972442,
         longitude: 77.580643,
       },
-
       {
-        longitude: 77.58574563,
-        latitude: 12.91249464,
+        longitude: 77.5454111,
+        latitude: 12.9414398,
+      },
+    ],
+
+    [
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
       },
       {
         longitude: 77.5454111,
         latitude: 12.9414398,
       },
       {
-        longitude: 77.5728281,
-        latitude: 12.8818289,
+        longitude: 77.5855952,
+        latitude: 12.9128212,
       },
       {
-        longitude: 77.58827011,
-        latitude: 12.89823678,
+        longitude: 77.5454111,
+        latitude: 12.9414398,
       },
     ],
-  ];
+  ]);
 
-  const handlePlotPath = async (
-    path,
-    index,
-    pathSteps,
-    roadPoints,
-    plotRoute
-  ) => {
-    const tempPathSteps = await plot.route(
+  const handlePlotPath = async (path, roadSteps, routeNo) => {
+    const tempPathSteps = await PLOTTER.route(
       map,
       [...path],
-      index + 1,
-      plotRoute
+      roadSteps,
+      routeNo
     );
-    pathSteps.push(tempPathSteps);
-    roadPoints.push(ps.roadPoints(path, tempPathSteps.steps));
+    // roadPoints.push(ps.roadPoints(path, tempPathSteps.steps));
+    // ps.getRoadPointsDuration(tempPathSteps.steps, roadPoints);
   };
 
   const handleExtract = async () => {
@@ -154,24 +135,33 @@ export default function Home() {
 
     plot.setTraffic(map);
 
-    console.log([tempHub, ...originGeoInfo, ...destGeoInfo]);
-
     const distanceMatrix = await pds.batchDistanceMatrix(
       originGeoInfo,
       destGeoInfo
     );
 
-    const tempPathSteps = [];
+    // const tempPathSteps = [];
 
-    // This will store the road version of the origin destination points
-    const tempRoadPoints = [];
+    // // This will store the road version of the origin destination points
+    // const tempRoadPoints = [];
 
-    await Promise.all(
-      paths.map(
-        async (path, index) =>
-          await handlePlotPath(path, index, tempPathSteps, tempRoadPoints, true)
-      )
-    );
+    // await Promise.all(
+    //   paths.map(
+    //     async (path, index) =>
+    //       await handlePlotPath(path, index, tempPathSteps, tempRoadPoints, true)
+    //   )
+    // );
+
+    // const tempRoadSteps = [];
+    // await Promise.all(
+    //   // The path is getting passed which is the modified route. The previous deliveries are removed from the route
+    //   paths.map(
+    //     async (path, index) =>
+    //       await handlePlotPath(path, tempRoadSteps, index + 1)
+    //   )
+    // );
+
+    // setRoadSteps(tempRoadSteps);
   };
 
   const handleDeliveries = async () => {
@@ -208,8 +198,6 @@ export default function Home() {
         }
       });
     } else newPath = paths;
-
-    console.log(newPath);
 
     await Promise.all(
       // The path is getting passed which is the modified route. The previous deliveries are removed from the route
@@ -264,8 +252,129 @@ export default function Home() {
       tempLastCoordinates.push(coordinatesArray[coordinatesArray.length - 1]);
     });
     setLastPoints(tempLastCoordinates);
+  };
 
-    console.log(paths, pointsToBeCovered);
+  const asyncSetPathArray = async (smoothCoordinates) => {
+    setPathArray(smoothCoordinates);
+  };
+
+  const handleOptimizedNDeliveries = async () => {
+    const roadSteps = [];
+    paths.map(() => roadSteps.push([]));
+    await Promise.all(
+      // The path is getting passed which is the modified route. The previous deliveries are removed from the route
+      paths.map(
+        async (path, index) => await handlePlotPath(path, roadSteps, index)
+      )
+    );
+
+    console.log(roadSteps);
+
+    const newPaths = [];
+    roadSteps.forEach((roadStep) => {
+      let tempPath = [];
+      let roadStepDuration = 0;
+      roadStep.forEach((steps) => {
+        steps.forEach((step) => {
+          // Fixing the time
+          tempPath.push({
+            ...step,
+            duration: roadStepDuration + step.duration,
+          });
+        });
+
+        roadStepDuration += steps[steps.length - 1].duration;
+      });
+      newPaths.push(tempPath);
+    });
+
+    // Calculate the roadPoints
+    const roadPoints = [];
+    roadSteps.forEach((roadStep) => {
+      const tempRoadPoints = [];
+      let tempTime = 0;
+      roadStep.forEach((step) => {
+        tempRoadPoints.push({
+          ...step[step.length - 1],
+          duration: tempTime + step[step.length - 1].duration,
+        });
+        tempTime += step[step.length - 1].duration;
+      });
+      roadPoints.push(tempRoadPoints);
+    });
+
+    console.log(roadPoints);
+
+    // Calculating the time for n deliveries
+    const nthDeliveryTime = await ps.calculateNDeliveryTime(
+      roadPoints,
+      simulateDeliveries
+    );
+
+    // Filtering out the route and removing the route which cannot be traversed in the n delivery time
+    const filteredDeliveryRouteForNDeliveries = await OPS.filterNDeliveries(
+      newPaths,
+      nthDeliveryTime.duration
+    );
+
+    // Enumerating the filtered route with smoothened coordinate for animation
+    const smoothCoordinates = await ps.smoothenCoordinates(
+      filteredDeliveryRouteForNDeliveries,
+      nthDeliveryTime.duration
+    );
+
+    console.log(roadPoints.length);
+
+    // Preparing for the next simulation
+    const newPathForNextSimulation = [];
+    for (let pathIndex = 0; pathIndex < roadPoints.length; pathIndex++) {
+      let stepIndex = 0;
+
+      for (
+        stepIndex = 0;
+        stepIndex < roadPoints[pathIndex].length;
+        stepIndex++
+      ) {
+        if (
+          roadPoints[pathIndex][stepIndex].duration > nthDeliveryTime.duration
+        ) {
+          console.log(
+            roadPoints[pathIndex][stepIndex].duration,
+            nthDeliveryTime.duration,
+            pathIndex
+          );
+          break;
+        }
+      }
+
+      // console.log(stepIndex);
+
+      let tempPath = [];
+      console.log(stepIndex, pathIndex);
+      if (stepIndex < roadPoints[pathIndex].length) {
+        if (smoothCoordinates[pathIndex].length)
+          tempPath = [
+            smoothCoordinates[pathIndex][
+              smoothCoordinates[pathIndex].length - 1
+            ],
+          ];
+        for (
+          let tempIndex = stepIndex;
+          tempIndex < roadPoints[pathIndex].length;
+          tempIndex++
+        ) {
+          tempPath.push(roadPoints[pathIndex][tempIndex]);
+        }
+      } else {
+        tempPath = [roadPoints[pathIndex][roadPoints[pathIndex].length - 1]];
+      }
+
+      newPathForNextSimulation.push(tempPath);
+    }
+
+    console.log(newPathForNextSimulation, paths, roadPoints);
+    setPaths(newPathForNextSimulation);
+    await asyncSetPathArray(smoothCoordinates);
   };
 
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
@@ -313,7 +422,7 @@ export default function Home() {
         onChange={(e) => setSimulateDeliveries(Number(e.target.value))}
         type="number"
       />
-      <Button onClick={handleDeliveries}>SIMULATE</Button>
+      <Button onClick={handleOptimizedNDeliveries}>SIMULATE</Button>
     </main>
   );
 }

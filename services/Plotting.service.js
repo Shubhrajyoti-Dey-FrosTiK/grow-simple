@@ -29,18 +29,36 @@ export default class PlottingService {
           color: "yellow",
         })
           .setLngLat([pathPoint.longitude, pathPoint.latitude])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }) // add popups
+              .setHTML(
+                `<h2 style="color: black; margin-bottom: 5px;"><b>Hub</b></h2><h2 style="color: black;">Lat: ${pathPoint.latitude}</h2><h2 style="color: black;">Lon: ${pathPoint.longitude}</h2>`
+              )
+          )
           .addTo(map.current);
       else if (originLen >= index)
         new mapboxgl.Marker({
           color: "blue",
         })
           .setLngLat([pathPoint.longitude, pathPoint.latitude])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }) // add popups
+              .setHTML(
+                `<h2 style="color: black; margin-bottom: 5px;"><b>Pickup Point</b></h2><h2 style="color: black;">Lat: ${pathPoint.latitude}</h2><h2 style="color: black;">Lon: ${pathPoint.longitude}</h2>`
+              )
+          )
           .addTo(map.current);
       else
         new mapboxgl.Marker({
           color: "red",
         })
           .setLngLat([pathPoint.longitude, pathPoint.latitude])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }) // add popups
+              .setHTML(
+                `<h2 style="color: black; margin-bottom: 5px;"><b>Drop Point</b></h2><h2 style="color: black;">Lat: ${pathPoint.latitude}</h2><h2 style="color: black;">Lon: ${pathPoint.longitude}</h2>`
+              )
+          )
           .addTo(map.current);
 
       //     map.current.addLayer({
@@ -98,12 +116,14 @@ export default class PlottingService {
           )
       );
 
-    if (prevMarker) tempMarker.addTo(map.current);
+    if (prevMarker) {
+      tempMarker.addTo(map.current);
+    }
 
     return tempMarker;
   }
 
-  async getRoute(riderPath, route, steps, details) {
+  async getRoute(riderPath, route, steps, details, roadPoints) {
     let pointsArray = [];
 
     if (riderPath.length < 2) return;
@@ -122,8 +142,6 @@ export default class PlottingService {
     const query = await fetch(URL, { method: "GET" });
     const json = await query.json();
 
-    console.log(json);
-
     // Change the details
     details.duration += json.routes[0].duration;
     details.distance += json.routes[0].distance;
@@ -132,10 +150,19 @@ export default class PlottingService {
     const data = json.routes[0];
     data.geometry.coordinates.forEach((coordinate) => route.push(coordinate));
     data.legs[0].steps.forEach((step) => steps.push(step));
+
+    const tempRoadPoints = [];
+    json.waypoints.forEach((waypoint) =>
+      tempRoadPoints.push({
+        longitude: waypoint.location[0],
+        latitude: waypoint.location[1],
+      })
+    );
+    roadPoints.push(tempRoadPoints);
   }
 
   // Plot the routes
-  async route(map, riderPath, routeNo, plotRoute) {
+  async route(map, riderPath, routeNo, plotRoute, roadPoints) {
     const batchRiderPath = this.splitToChunks([...riderPath], 24);
     const route = [];
     const steps = [];
@@ -145,7 +172,10 @@ export default class PlottingService {
     };
 
     await Promise.all(
-      batchRiderPath.map((path) => this.getRoute(path, route, steps, details))
+      batchRiderPath.map(
+        async (path) =>
+          await this.getRoute(path, route, steps, details, roadPoints)
+      )
     );
 
     const geojson = {

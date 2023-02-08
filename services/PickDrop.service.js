@@ -101,8 +101,14 @@ export class PickDropService {
 
     // Promise.all(batchedProcessedData.forEach(async (batchItems) => {}));
     await Promise.all(
-      batchedProcessedData.map((batchItems) =>
-        this.getGeoCoordinates(batchItems, originGeoInfo, destGeoInfo, origin)
+      batchedProcessedData.map(
+        async (batchItems) =>
+          await this.getGeoCoordinates(
+            batchItems,
+            originGeoInfo,
+            destGeoInfo,
+            origin
+          )
       )
     );
 
@@ -156,13 +162,14 @@ export class PickDropService {
 
     // Populate all the rows
     await Promise.all(
-      destBatch.map((dest, index) =>
-        this.distanceMatrix(
-          originGeoInfo,
-          dest,
-          distanceMatrix,
-          index * LIMIT.DISTANCE_MATRIX
-        )
+      destBatch.map(
+        async (dest, index) =>
+          await this.distanceMatrix(
+            originGeoInfo,
+            dest,
+            distanceMatrix,
+            index * LIMIT.DISTANCE_MATRIX
+          )
       )
     );
 
