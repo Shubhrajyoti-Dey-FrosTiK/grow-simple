@@ -9664,5 +9664,5 @@ packages:
   file:wasm/pkg:
     resolution: {directory: wasm/pkg, type: directory}
     name: wasm
-    version: 1.4.0
+    version: 0.1.0
     dev: false

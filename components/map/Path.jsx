@@ -7,7 +7,7 @@ import Truck from "../../assets/truck.png";
 import { useSelector } from "react-redux";
 import { selectSimulation } from "../../store/states/simulation";
 
-function Path({ path, map, pathIndex }) {
+function Path({ path, map, pathIndex, smoothenedCoordinates }) {
   const plot = new PlottingService();
   const element = useRef(null);
   const play = useSelector(selectSimulation);
@@ -28,7 +28,8 @@ function Path({ path, map, pathIndex }) {
         longitude: path[index + (index == path.length - 1 ? 0 : 1)].longitude,
       },
       marker,
-      pathIndex
+      pathIndex,
+      smoothenedCoordinates
     );
     // await sleep(1000);
     setMarker(tempMarker);

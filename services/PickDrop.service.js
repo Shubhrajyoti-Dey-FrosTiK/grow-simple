@@ -131,6 +131,8 @@ export class PickDropService {
       distanceMatrixProp
     );
 
+    console.log(distanceMatrixResponse.data)
+
     // Populate the rows
     distanceMatrixResponse.data.resourceSets[0].resources[0].results.forEach(
       (dm) => {

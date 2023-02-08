@@ -3,7 +3,6 @@
 import { Button, TextInput, Typography } from "../components/components";
 import DisplayCSV from "../components/displayCSV";
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "../firebase/useAuth";
 import FileInput from "../components/input/FileInput";
 
 // Map
@@ -20,12 +19,16 @@ import OptimizedPlottingService from "../services/Optimized.Plotting.service";
 import SimulationService from "../services/Simulation.service";
 import PathService from "../services/Path.service";
 import OptimizedPathService from "../services/Optimized.Path.service";
-import axios from "axios";
 
 // Components
 import Path from "../components/map/Path";
 import { selectSimulation, trigger } from "../store/states/simulation";
 import { WASMTest } from "../components/WASMTest.tsx";
+import { Node, DeliveryType, Route } from "./types.ts";
+
+import { useContext } from "react";
+
+import { WASMContext } from "../wasmContext";
 
 export default function Home() {
   // const { user, isSignedIn } = useAuth();
@@ -47,11 +50,28 @@ export default function Home() {
   const [deliveryCount, setDeliveryCount] = useState(0);
   const [simulateDeliveries, setSimulateDeliveries] = useState(1);
   const [pathCovered, setPathCovered] = useState([]);
+  const [globalDistanceMatrix, setGlobalDistanceMatrix] = useState([[]]);
+  const ctx = useContext(WASMContext);
+
   // const [roadSteps, setRoadSteps] = useState([]);
 
   const tempHub = {
     latitude: 12.972442,
     longitude: 77.580643,
+  };
+
+  const numberOfRiders = 5;
+
+  const initialRequest = () => {
+    let routes = new Array(numberOfRiders).fill(null);
+
+    let node = {
+      delivery_type: 2,
+      index: 1,
+    };
+    console.log(
+      ctx.wasm.invoke_mutation_from_js(routes, node, globalDistanceMatrix)
+    );
   };
 
   const [paths, setPaths] = useState([
@@ -60,10 +80,13 @@ export default function Home() {
         latitude: 12.972442,
         longitude: 77.580643,
       },
-
       {
         longitude: 77.5816906,
         latitude: 12.8927062,
+      },
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
       },
     ],
     [
@@ -74,6 +97,10 @@ export default function Home() {
       {
         longitude: 77.5454111,
         latitude: 12.9414398,
+      },
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
       },
     ],
 
@@ -94,15 +121,20 @@ export default function Home() {
         longitude: 77.5454111,
         latitude: 12.9414398,
       },
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
     ],
   ]);
 
-  const handlePlotPath = async (path, roadSteps, routeNo) => {
+  const handlePlotPath = async (path, roadSteps, routeNo, plot) => {
     const tempPathSteps = await PLOTTER.route(
       map,
       [...path],
       roadSteps,
-      routeNo
+      routeNo,
+      plot
     );
     // roadPoints.push(ps.roadPoints(path, tempPathSteps.steps));
     // ps.getRoadPointsDuration(tempPathSteps.steps, roadPoints);
@@ -137,11 +169,14 @@ export default function Home() {
     plot.setTraffic(map);
 
     const distanceMatrix = await pds.batchDistanceMatrix(
-      originGeoInfo,
-      destGeoInfo
+      [tempHub, ...originGeoInfo],
+      [tempHub, ...destGeoInfo]
     );
-
+    console.log(distanceMatrix);
+    setGlobalDistanceMatrix(distanceMatrix);
     // const tempPathSteps = [];
+
+    // initialRequest();
 
     // // This will store the road version of the origin destination points
     // const tempRoadPoints = [];
@@ -161,6 +196,16 @@ export default function Home() {
     //       await handlePlotPath(path, tempRoadSteps, index + 1)
     //   )
     // );
+
+    const roadSteps = [];
+    paths.map(() => roadSteps.push([]));
+    await Promise.all(
+      // The path is getting passed which is the modified route. The previous deliveries are removed from the route
+      paths.map(
+        async (path, index) =>
+          await handlePlotPath(path, roadSteps, index, true)
+      )
+    );
 
     // setRoadSteps(tempRoadSteps);
   };
@@ -269,8 +314,6 @@ export default function Home() {
       )
     );
 
-    console.log(roadSteps);
-
     const newPaths = [];
     roadSteps.forEach((roadStep) => {
       let tempPath = [];
@@ -286,6 +329,7 @@ export default function Home() {
 
         roadStepDuration += steps[steps.length - 1].duration;
       });
+
       newPaths.push(tempPath);
     });
 
@@ -304,11 +348,10 @@ export default function Home() {
       roadPoints.push(tempRoadPoints);
     });
 
-    console.log(roadPoints);
-
     // Calculating the time for n deliveries
     const nthDeliveryTime = await ps.calculateNDeliveryTime(
       roadPoints,
+      newPaths,
       simulateDeliveries
     );
 
@@ -324,7 +367,7 @@ export default function Home() {
       nthDeliveryTime.duration
     );
 
-    console.log(roadPoints.length);
+    console.log(smoothCoordinates, newPaths);
 
     // Preparing for the next simulation
     const newPathForNextSimulation = [];
@@ -339,41 +382,26 @@ export default function Home() {
         if (
           roadPoints[pathIndex][stepIndex].duration > nthDeliveryTime.duration
         ) {
-          console.log(
-            roadPoints[pathIndex][stepIndex].duration,
-            nthDeliveryTime.duration,
-            pathIndex
-          );
           break;
         }
       }
 
       // console.log(stepIndex);
 
-      let tempPath = [];
-      console.log(stepIndex, pathIndex);
-      if (stepIndex < roadPoints[pathIndex].length) {
-        if (smoothCoordinates[pathIndex].length)
-          tempPath = [
-            smoothCoordinates[pathIndex][
-              smoothCoordinates[pathIndex].length - 1
-            ],
-          ];
-        for (
-          let tempIndex = stepIndex;
-          tempIndex < roadPoints[pathIndex].length;
-          tempIndex++
-        ) {
-          tempPath.push(roadPoints[pathIndex][tempIndex]);
-        }
-      } else {
-        tempPath = [roadPoints[pathIndex][roadPoints[pathIndex].length - 1]];
+      let tempPath = [
+        smoothCoordinates[pathIndex][smoothCoordinates[pathIndex].length - 1],
+      ];
+      for (
+        let tempIndex = stepIndex;
+        tempIndex < roadPoints[pathIndex].length;
+        tempIndex++
+      ) {
+        tempPath.push(roadPoints[pathIndex][tempIndex]);
       }
 
       newPathForNextSimulation.push(tempPath);
     }
 
-    console.log(newPathForNextSimulation, paths, roadPoints);
     setPaths(newPathForNextSimulation);
     await asyncSetPathArray(smoothCoordinates);
   };
@@ -413,6 +441,7 @@ export default function Home() {
                 key={`Path_${pathIndex}`}
                 path={path}
                 map={map}
+                smoothenedCoordinates={pathArray}
                 pathIndex={pathIndex + 1}
               />
             );

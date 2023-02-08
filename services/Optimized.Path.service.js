@@ -5,12 +5,11 @@ export default class OptimizedPathService {
 
   async filterNDeliveries(paths, time) {
     const filteredDeliveries = [];
-    console.log(paths, time);
 
     paths.forEach((path) => {
       const tempDeliveries = [];
       for (let stepIndex = 0; stepIndex < path.length; stepIndex++) {
-        if (path[stepIndex].duration <= time) {
+        if (!path[stepIndex].duration || path[stepIndex].duration <= time) {
           tempDeliveries.push(path[stepIndex]);
         } else break;
       }
@@ -18,6 +17,7 @@ export default class OptimizedPathService {
       filteredDeliveries.push(tempDeliveries);
     });
 
+    console.log(filteredDeliveries);
     return filteredDeliveries;
   }
 }

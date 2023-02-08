@@ -18,7 +18,12 @@ export default class OptimizedPlottingService {
     if (riderPath.length < 2) {
       if (!riderPath.length) return;
       route = [riderPath[0].longitude, riderPath[0].latitude];
-      roadSteps[routeNo] = [[riderPath[0]]];
+      roadSteps[routeNo].push([
+        {
+          latitude: riderPath[0].longitude,
+          longitude: riderPath[0].latitude,
+        },
+      ]);
       return;
     }
 
@@ -85,7 +90,7 @@ export default class OptimizedPlottingService {
   }
 
   // Plot the routes
-  async route(map, path, roadSteps, routeNo) {
+  async route(map, path, roadSteps, routeNo, plot) {
     const batchRiderPath = this.splitToChunks([...path], 24);
     const route = [];
 
@@ -104,26 +109,28 @@ export default class OptimizedPlottingService {
       },
     };
 
-    if (map.current.getSource(`route-${routeNo}`)) {
-      map.current.getSource(`route-${routeNo}`).setData(geojson);
-    } else {
-      map.current.addLayer({
-        id: `route-${routeNo}`,
-        type: "line",
-        source: {
-          type: "geojson",
-          data: geojson,
-        },
-        layout: {
-          "line-join": "round",
-          "line-cap": "round",
-        },
-        paint: {
-          "line-color": "#3887be",
-          "line-width": 5,
-          "line-opacity": 0.6,
-        },
-      });
+    if (plot) {
+      if (map.current.getSource(`route-${routeNo}`)) {
+        map.current.getSource(`route-${routeNo}`).setData(geojson);
+      } else {
+        map.current.addLayer({
+          id: `route-${routeNo}`,
+          type: "line",
+          source: {
+            type: "geojson",
+            data: geojson,
+          },
+          layout: {
+            "line-join": "round",
+            "line-cap": "round",
+          },
+          paint: {
+            "line-color": "#3887be",
+            "line-width": 5,
+            "line-opacity": 0.6,
+          },
+        });
+      }
     }
   }
 }

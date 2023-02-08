@@ -95,9 +95,23 @@ export default class PlottingService {
     longitude,
     goToCoordinate,
     prevMarker,
-    pathIndex
+    pathIndex,
+    smoothCoordinates
   ) {
-    if (prevMarker) prevMarker.remove();
+    let found = false;
+    for (let i = 0; i < smoothCoordinates.length; i++) {
+      if (
+        smoothCoordinates[i].length == 1 &&
+        smoothCoordinates[i][0].latitude == latitude &&
+        smoothCoordinates[i][0].longitude == longitude
+      ) {
+        console.log("Hello");
+        found = true;
+        break;
+      }
+    }
+
+    if (!found && prevMarker) prevMarker.remove();
     // Create the car icon
     const element = document.createElement("div");
     element.classList.add("truck");
