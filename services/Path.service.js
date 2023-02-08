@@ -15,7 +15,8 @@ export default class PathService {
         let stepDistance = 0;
         // In each step check the coordinates
         step.geometry.coordinates.map((coordinate, coordinateIndex) => {
-          // Calculate the distance between 2 coordinates
+          // Calcu"4ate the distance between 2 coordinates
+
           const tempDistance = getDistance(location, {
             longitude: coordinate[0],
             latitude: coordinate[1],
@@ -56,9 +57,11 @@ export default class PathService {
   }
 
   async calculateNDeliveryTime(roadPointsArray, n) {
+    console.log(roadPointsArray);
     let completeRoadPointsArray = [];
     roadPointsArray.forEach((roadPoints) => {
-      completeRoadPointsArray = [...completeRoadPointsArray, ...roadPoints];
+      if (roadPoints.length > 1)
+        completeRoadPointsArray = [...completeRoadPointsArray, ...roadPoints];
     });
 
     completeRoadPointsArray.sort((a, b) => {
@@ -68,7 +71,6 @@ export default class PathService {
     });
 
     console.log(completeRoadPointsArray);
-
     return completeRoadPointsArray[n - 1];
   }
 
