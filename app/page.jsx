@@ -341,11 +341,11 @@ export default function Home() {
     setHasExtracted(true);
 
     // SET OF ORIGINS / PICKUPS
-    const origin = updatedOrigins ? [] : ReduxPickDropContext.pickupPoints;
+    const origin = updatedOrigins ? [] : ReduxPickDropContext.dropPoints;
     let tempOriginState = [...originState];
 
     // SET OF DESTINATIONS / DROPS
-    const dest = ReduxPickDropContext.dropPoints;
+    const dest = ReduxPickDropContext.pickupPoints;
 
     let { originGeoInfo, destGeoInfo, hubGeoInfo } =
       await pds.batchGeoCoordinates(origin, dest);
@@ -374,6 +374,8 @@ export default function Home() {
       [tempHub, ...originGeoInfo, ...destGeoInfo],
       originGeoInfo.length
     );
+
+    console.log([tempHub, ...originGeoInfo, ...destGeoInfo]);
 
     plot.setTraffic(map);
 
@@ -648,13 +650,13 @@ export default function Home() {
         {/* <Button type="file"></Button> */}
         <Typography order={4}>Upload Data</Typography>
         <div className="flex flex-wrap gap-5">
-          <FileInput pick={true} />
+          <FileInput drop={true} />
         </div>
         <div>
           <Typography order={4}>Preview Data</Typography>
-          <DisplayCSV csv={ReduxPickDropContext.pickupPoints} pickup />
+          <DisplayCSV csv={ReduxPickDropContext.dropPoints} />
         </div>
-        {ReduxPickDropContext.pickupPoints.length ? (
+        {ReduxPickDropContext.dropPoints.length ? (
           <Button className="mt-2 mb-2" onClick={() => handleExtract()}>
             Extract Data
           </Button>
@@ -708,9 +710,9 @@ export default function Home() {
         )}
         {hasSimulated && (
           <div>
-            <FileInput drop={true} />
-            <DisplayCSV csv={ReduxPickDropContext.dropPoints} />
-            {ReduxPickDropContext.dropPoints.length ? (
+            <FileInput pick={true} />
+            <DisplayCSV csv={ReduxPickDropContext.pickupPoints} pickup={true} />
+            {ReduxPickDropContext.pickupPoints.length ? (
               <div>
                 <Button onClick={handleDynamicPoints}>
                   Add dynamic pickup points

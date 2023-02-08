@@ -150,7 +150,7 @@ export default function FileInput({
               />
 
               <Typography order={4} size="xl" inline>
-                {pick ? "Select Drop points" : "Select Pickup Points"} XLSX
+                {pick ? "Select Pick points" : "Select Drop Points"} XLSX
               </Typography>
               <Text size="sm" color="dimmed" inline mt={7}>
                 Drag and drop or click to attach {pick ? "Pickup" : "Drop"}
@@ -163,7 +163,7 @@ export default function FileInput({
 
       <div className="relative z-2 bottom-[20px]">
         <Button onClick={() => openRef.current?.()} variant="gradient">
-          Upload Pickup Points
+          Upload {pick ? "Pickup" : "Drop"} Points
         </Button>
       </div>
     </div>
