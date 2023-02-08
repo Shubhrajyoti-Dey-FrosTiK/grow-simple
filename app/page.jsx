@@ -51,7 +51,7 @@ export default function Home() {
   const [simulateDeliveries, setSimulateDeliveries] = useState(1);
   const [pathCovered, setPathCovered] = useState([]);
   const [globalDistanceMatrix, setGlobalDistanceMatrix] = useState([[]]);
-  const ctx = useContext(WASMContext);
+  const WASM = useContext(WASMContext).wasm;
 
   // const [roadSteps, setRoadSteps] = useState([]);
 
@@ -62,15 +62,35 @@ export default function Home() {
 
   const numberOfRiders = 5;
 
-  const initialRequest = (distanceMatrix, timeMatrix) => {
+  const initialRequest = async (
+    distanceMatrix,
+    timeMatrix,
+    originGeoInfo,
+    destGeoInfo
+  ) => {
     let routes = new Array(numberOfRiders).fill({ nodes: [] });
+    let riderCoordinates = [];
+    pathArray.forEach((path) => riderCoordinates.push(path[path.length - 1]));
 
-    let node = {
-      delivery_type: 2,
-      index: 1,
-    };
+    if (!riderCoordinates.length) {
+      riderCoordinates.push(tempHub);
+    }
 
-    console.log(ctx.wasm.invoke_mutation_from_js(routes, node, distanceMatrix));
+    let riderMatrix = await pds.batchDistanceMatrix(riderCoordinates, [
+      ...originGeoInfo,
+      ...destGeoInfo,
+    ]);
+
+    for (let riderIndex = 1; riderIndex < numberOfRiders; riderIndex++) {
+      routes = WASM.invoke_clustering_from_js(
+        routes,
+        { delivery_type: 2, index: riderIndex },
+        distanceMatrix,
+        timeMatrix,
+        riderMatrix
+      );
+      console.log(routes);
+    }
   };
 
   const [originalPaths, setOriginalPaths] = useState([
@@ -233,7 +253,8 @@ export default function Home() {
       [tempHub, ...originGeoInfo, ...destGeoInfo]
     );
 
-    // initialRequest(distanceMatrix, timeMatrix);
+    if (updatedOrigins)
+      initialRequest(distanceMatrix, timeMatrix, originGeoInfo, destGeoInfo);
 
     // const tempPathSteps = [];
 
