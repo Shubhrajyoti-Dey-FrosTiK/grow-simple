@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import RootStyleRegistry from "./emotion";
+import { WASMContextProvider } from "../wasmContext";
 
 // Redux
 import ReduxProvider from "./redux";
@@ -139,10 +140,12 @@ export default function RootLayout({
       <body>
         <ReduxProvider>
           <RootStyleRegistry>
+            <WASMContextProvider>
             <div className="p-5">
               {/* <Button onClick={googleSignIn}>Login with GOOGLE</Button> */}
               {children}
             </div>
+            </WASMContextProvider>
           </RootStyleRegistry>
         </ReduxProvider>
       </body>

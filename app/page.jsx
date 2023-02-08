@@ -25,6 +25,7 @@ import axios from "axios";
 // Components
 import Path from "../components/map/Path";
 import { selectSimulation, trigger } from "../store/states/simulation";
+import { WASMTest } from "../components/WASMTest.tsx";
 
 export default function Home() {
   // const { user, isSignedIn } = useAuth();
@@ -423,6 +424,7 @@ export default function Home() {
         type="number"
       />
       <Button onClick={handleOptimizedNDeliveries}>SIMULATE</Button>
+      <WASMTest />
     </main>
   );
 }
