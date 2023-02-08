@@ -23,11 +23,9 @@ import OptimizedPathService from "../services/Optimized.Path.service";
 // Components
 import Path from "../components/map/Path";
 import { selectSimulation, trigger } from "../store/states/simulation";
-import { WASMTest } from "../components/WASMTest.tsx";
-import { Node, DeliveryType, Route } from "./types.ts";
 
+// WASM imports
 import { useContext } from "react";
-
 import { WASMContext } from "../wasmContext";
 
 export default function Home() {
@@ -40,7 +38,7 @@ export default function Home() {
   const PLOTTER = new OptimizedPlottingService();
   const simulate = new SimulationService();
   const ps = new PathService();
-  
+  const WASM = useContext(WASMContext).wasm;
   
   const mapContainer = useRef(null);
   const map = useRef(null);
@@ -52,7 +50,6 @@ export default function Home() {
   const [simulateDeliveries, setSimulateDeliveries] = useState(1);
   const [pathCovered, setPathCovered] = useState([]);
   const [globalDistanceMatrix, setGlobalDistanceMatrix] = useState([[]]);
-  const WASMContext = useContext(WASMContext);
   
   // const [roadSteps, setRoadSteps] = useState([]);
 
@@ -70,7 +67,9 @@ export default function Home() {
       delivery_type: 2,
       index: 1
     }
-    WASMContext.ctx.invoke_clustering_from_js(routes, node, distanceMatrix, )
+
+    // routes = WASM.invoke_clustering_from_js(routes, node, distanceMatrix, distanceMatrix, distanceMatrix)
+    console.log(WASM.add(3,5));
   }
   
   const [paths, setPaths] = useState([
@@ -444,7 +443,7 @@ export default function Home() {
         type="number"
       />
       <Button onClick={handleOptimizedNDeliveries}>SIMULATE</Button>
-      <WASMTest />
+      <Button onClick={initialRequest}>Initial Request</Button>
     </main>
   );
 }
