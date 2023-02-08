@@ -86,6 +86,8 @@ export class PickDropService {
   async batchGeoCoordinates(origin, dest) {
     const processedData = [];
 
+    console.log(origin);
+
     // CONVERTING THE DATA INTO THE API COMPATIBLE FORM
     [...origin, ...dest].forEach((sample) =>
       processedData.push({ addressLine: sample.location })
@@ -112,6 +114,11 @@ export class PickDropService {
       )
     );
 
+    console.log({
+      originGeoInfo,
+      destGeoInfo,
+    });
+
     return {
       originGeoInfo,
       destGeoInfo,
@@ -119,7 +126,13 @@ export class PickDropService {
   }
 
   // GET Distance Matrix
-  async distanceMatrix(originGeoInfo, destGeoInfo, distanceMatrix, len) {
+  async distanceMatrix(
+    originGeoInfo,
+    destGeoInfo,
+    distanceMatrix,
+    timeMatrix,
+    len
+  ) {
     const distanceMatrixProp = {
       origins: originGeoInfo,
       destinations: destGeoInfo,
@@ -131,13 +144,16 @@ export class PickDropService {
       distanceMatrixProp
     );
 
-    console.log(distanceMatrixResponse.data)
+    console.log(distanceMatrixResponse);
 
     // Populate the rows
     distanceMatrixResponse.data.resourceSets[0].resources[0].results.forEach(
       (dm) => {
+        console.log(dm);
         distanceMatrix[dm.destinationIndex + len][dm.originIndex] =
           dm.travelDistance;
+        timeMatrix[dm.destinationIndex + len][dm.originIndex] =
+          dm.travelDuration;
       }
     );
   }
@@ -152,6 +168,7 @@ export class PickDropService {
     );
 
     const distanceMatrix = [];
+    const timeMatrix = [];
 
     // Create the rows
     for (let i = 0; i < destGeoInfo.length; i++) {
@@ -159,7 +176,8 @@ export class PickDropService {
       for (let j = 0; j < originGeoInfo.length; j++) {
         tempDmCols.push(null);
       }
-      distanceMatrix.push(tempDmCols);
+      distanceMatrix.push([...tempDmCols]);
+      timeMatrix.push([...tempDmCols]);
     }
 
     // Populate all the rows
@@ -170,11 +188,12 @@ export class PickDropService {
             originGeoInfo,
             dest,
             distanceMatrix,
+            timeMatrix,
             index * LIMIT.DISTANCE_MATRIX
           )
       )
     );
 
-    return distanceMatrix;
+    return { distanceMatrix, timeMatrix };
   }
 }

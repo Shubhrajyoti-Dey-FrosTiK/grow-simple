@@ -60,32 +60,6 @@ export default class PlottingService {
               )
           )
           .addTo(map.current);
-
-      //     map.current.addLayer({
-      //       id: `waypoint-${index + 1}`,
-      //       type: "circle",
-      //       source: {
-      //         type: "geojson",
-      //         data: {
-      //           type: "FeatureCollection",
-      //           features: [
-      //             {
-      //               type: "Feature",
-      //               properties: {},
-      //               geometry: {
-      //                 type: "Point",
-      //                 coordinates: [pathPoint.longitude, pathPoint.latitude],
-      //               },
-      //             },
-      //           ],
-      //         },
-      //       },
-      //       paint: {
-      //         "circle-radius": 10,
-      //         "circle-color": index < originLen ? "#3887be" : "red",
-      //       },
-      //     });
-      //   });
     });
   }
 

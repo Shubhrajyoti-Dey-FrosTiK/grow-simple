@@ -62,17 +62,70 @@ export default function Home() {
 
   const numberOfRiders = 5;
 
-  const initialRequest = () => {
-    let routes = new Array(numberOfRiders).fill(null);
+  const initialRequest = (distanceMatrix, timeMatrix) => {
+    let routes = new Array(numberOfRiders).fill({ nodes: [] });
 
     let node = {
       delivery_type: 2,
       index: 1,
     };
-    console.log(
-      ctx.wasm.invoke_mutation_from_js(routes, node, globalDistanceMatrix)
-    );
+
+    console.log(ctx.wasm.invoke_mutation_from_js(routes, node, distanceMatrix));
   };
+
+  const [originalPaths, setOriginalPaths] = useState([
+    [
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
+      {
+        longitude: 77.5816906,
+        latitude: 12.8927062,
+      },
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
+    ],
+    [
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
+      {
+        longitude: 77.5454111,
+        latitude: 12.9414398,
+      },
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
+    ],
+
+    [
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
+      {
+        longitude: 77.5454111,
+        latitude: 12.9414398,
+      },
+      {
+        longitude: 77.5855952,
+        latitude: 12.9128212,
+      },
+      {
+        longitude: 77.5454111,
+        latitude: 12.9414398,
+      },
+      {
+        latitude: 12.972442,
+        longitude: 77.580643,
+      },
+    ],
+  ]);
 
   const [paths, setPaths] = useState([
     [
@@ -140,17 +193,19 @@ export default function Home() {
     // ps.getRoadPointsDuration(tempPathSteps.steps, roadPoints);
   };
 
-  const handleExtract = async () => {
+  const handleExtract = async (updatedOrigins) => {
     setPathArray([]);
 
     // SET OF ORIGINS / PICKUPS
-    const origin = ReduxPickDropContext.pickupPoints;
+    const origin = updatedOrigins ? [] : ReduxPickDropContext.pickupPoints;
 
     // SET OF DESTINATIONS / DROPS
     const dest = ReduxPickDropContext.dropPoints;
 
-    const { originGeoInfo, destGeoInfo, hubGeoInfo } =
+    let { originGeoInfo, destGeoInfo, hubGeoInfo } =
       await pds.batchGeoCoordinates(origin, dest);
+
+    if (updatedOrigins) originGeoInfo = updatedOrigins;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -166,14 +221,20 @@ export default function Home() {
       originGeoInfo.length
     );
 
+    console.log(
+      [tempHub, ...originGeoInfo, ...destGeoInfo],
+      originGeoInfo.length
+    );
+
     plot.setTraffic(map);
 
-    const distanceMatrix = await pds.batchDistanceMatrix(
-      [tempHub, ...originGeoInfo],
-      [tempHub, ...destGeoInfo]
+    const { distanceMatrix, timeMatrix } = await pds.batchDistanceMatrix(
+      [tempHub, ...originGeoInfo, ...destGeoInfo],
+      [tempHub, ...originGeoInfo, ...destGeoInfo]
     );
-    console.log(distanceMatrix);
-    setGlobalDistanceMatrix(distanceMatrix);
+
+    // initialRequest(distanceMatrix, timeMatrix);
+
     // const tempPathSteps = [];
 
     // initialRequest();
@@ -355,6 +416,8 @@ export default function Home() {
       simulateDeliveries
     );
 
+    setDeliveryCount(deliveryCount + simulateDeliveries);
+
     // Filtering out the route and removing the route which cannot be traversed in the n delivery time
     const filteredDeliveryRouteForNDeliveries = await OPS.filterNDeliveries(
       newPaths,
@@ -406,6 +469,16 @@ export default function Home() {
     await asyncSetPathArray(smoothCoordinates);
   };
 
+  const handleDynamicPoints = () => {
+    let updatedOrigins = [];
+
+    paths.forEach((path) => {
+      updatedOrigins = [...updatedOrigins, ...path];
+    });
+
+    handleExtract(updatedOrigins);
+  };
+
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
   useEffect(() => {
@@ -425,15 +498,16 @@ export default function Home() {
         <Typography order={4}>Upload Data</Typography>
         <div className="flex flex-wrap gap-5">
           <FileInput pick={true} />
-          <FileInput drop={true} />
         </div>
         <div>
           <Typography order={4}>Preview Data</Typography>
           <DisplayCSV csv={ReduxPickDropContext.pickupPoints} pickup />
-          <DisplayCSV csv={ReduxPickDropContext.dropPoints} />
         </div>
-        <Button onClick={handleExtract}>Extract Data</Button>
+        <Button onClick={() => handleExtract()}>Extract Data</Button>
         <div ref={mapContainer} className="map-container h-[50vh]"></div>
+        <Typography order={5}>
+          Total {deliveryCount} deliveries simulated
+        </Typography>
         {pathArray.length &&
           pathArray.map((path, pathIndex) => {
             return (
@@ -453,7 +527,10 @@ export default function Home() {
         type="number"
       />
       <Button onClick={handleOptimizedNDeliveries}>SIMULATE</Button>
-      <WASMTest />
+
+      <FileInput drop={true} />
+      <DisplayCSV csv={ReduxPickDropContext.dropPoints} />
+      <Button onClick={handleDynamicPoints}>Add dynamic pickup points</Button>
     </main>
   );
 }
