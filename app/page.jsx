@@ -29,6 +29,7 @@ import { Node, DeliveryType, Route } from "./types.ts";
 import { useContext } from "react";
 
 import { WASMContext } from "../wasmContext";
+import { invoke_clustering_from_js } from "../wasm/pkg/wasm.js";
 
 export default function Home() {
   // const { user, isSignedIn } = useAuth();
@@ -52,13 +53,20 @@ export default function Home() {
   const [pathCovered, setPathCovered] = useState([]);
   const [globalDistanceMatrix, setGlobalDistanceMatrix] = useState([[]]);
   const WASM = useContext(WASMContext).wasm;
-
-  // const [roadSteps, setRoadSteps] = useState([]);
+  const [originState, setOriginState] = useState([]);
 
   const tempHub = {
     latitude: 12.972442,
     longitude: 77.580643,
   };
+
+  const [driverCoordinates, setDriverCoordinates] = useState([
+    tempHub,
+    tempHub,
+    tempHub,
+  ]);
+
+  // const [roadSteps, setRoadSteps] = useState([]);
 
   const numberOfRiders = 5;
 
@@ -66,7 +74,7 @@ export default function Home() {
     distanceMatrix,
     timeMatrix,
     originGeoInfo,
-    destGeoInfo
+    tempOriginState
   ) => {
     let routes = new Array(numberOfRiders).fill({ nodes: [] });
     let riderCoordinates = [];
@@ -76,20 +84,19 @@ export default function Home() {
       riderCoordinates.push(tempHub);
     }
 
-    let riderMatrix = await pds.batchDistanceMatrix(riderCoordinates, [
-      ...originGeoInfo,
-      ...destGeoInfo,
-    ]);
+    let riderMatrix = await pds.batchDistanceMatrix(
+      driverCoordinates,
+      tempOriginState
+    );
 
     for (let riderIndex = 1; riderIndex < numberOfRiders; riderIndex++) {
-      routes = WASM.invoke_clustering_from_js(
+      routes = invoke_clustering_from_js(
         routes,
         { delivery_type: 2, index: riderIndex },
         distanceMatrix,
         timeMatrix,
         riderMatrix
       );
-      console.log(routes);
     }
   };
 
@@ -218,6 +225,7 @@ export default function Home() {
 
     // SET OF ORIGINS / PICKUPS
     const origin = updatedOrigins ? [] : ReduxPickDropContext.pickupPoints;
+    let tempOriginState = [...originState];
 
     // SET OF DESTINATIONS / DROPS
     const dest = ReduxPickDropContext.dropPoints;
@@ -225,7 +233,16 @@ export default function Home() {
     let { originGeoInfo, destGeoInfo, hubGeoInfo } =
       await pds.batchGeoCoordinates(origin, dest);
 
-    if (updatedOrigins) originGeoInfo = updatedOrigins;
+    if (updatedOrigins) {
+      originGeoInfo = updatedOrigins;
+      tempOriginState = [...tempOriginState, ...destGeoInfo];
+
+      setOriginState(tempOriginState);
+    } else {
+      tempOriginState = [tempHub, ...originGeoInfo, ...destGeoInfo];
+
+      setOriginState([tempHub, ...originGeoInfo, ...destGeoInfo]);
+    }
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -241,20 +258,14 @@ export default function Home() {
       originGeoInfo.length
     );
 
-    console.log(
-      [tempHub, ...originGeoInfo, ...destGeoInfo],
-      originGeoInfo.length
-    );
-
     plot.setTraffic(map);
 
     const { distanceMatrix, timeMatrix } = await pds.batchDistanceMatrix(
-      [tempHub, ...originGeoInfo, ...destGeoInfo],
-      [tempHub, ...originGeoInfo, ...destGeoInfo]
+      tempOriginState,
+      tempOriginState
     );
 
-    if (updatedOrigins)
-      initialRequest(distanceMatrix, timeMatrix, originGeoInfo, destGeoInfo);
+    initialRequest(distanceMatrix, timeMatrix, originGeoInfo, tempOriginState);
 
     // const tempPathSteps = [];
 
@@ -451,8 +462,6 @@ export default function Home() {
       nthDeliveryTime.duration
     );
 
-    console.log(smoothCoordinates, newPaths);
-
     // Preparing for the next simulation
     const newPathForNextSimulation = [];
     for (let pathIndex = 0; pathIndex < roadPoints.length; pathIndex++) {
@@ -469,8 +478,6 @@ export default function Home() {
           break;
         }
       }
-
-      // console.log(stepIndex);
 
       let tempPath = [
         smoothCoordinates[pathIndex][smoothCoordinates[pathIndex].length - 1],
@@ -491,13 +498,13 @@ export default function Home() {
   };
 
   const handleDynamicPoints = () => {
-    let updatedOrigins = [];
+    const updatedDriverState = [];
 
     paths.forEach((path) => {
-      updatedOrigins = [...updatedOrigins, ...path];
+      updatedDriverState.push(path[path.length - 1]);
     });
-
-    handleExtract(updatedOrigins);
+    setDriverCoordinates(updatedDriverState);
+    handleExtract(updatedDriverState);
   };
 
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
