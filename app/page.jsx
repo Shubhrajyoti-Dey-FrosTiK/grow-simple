@@ -3,7 +3,6 @@
 import { Button, TextInput, Typography } from "../components/components";
 import DisplayCSV from "../components/displayCSV";
 import { useEffect, useRef, useState } from "react";
-import { useAuth } from "../firebase/useAuth";
 import FileInput from "../components/input/FileInput";
 
 // Map
@@ -20,12 +19,16 @@ import OptimizedPlottingService from "../services/Optimized.Plotting.service";
 import SimulationService from "../services/Simulation.service";
 import PathService from "../services/Path.service";
 import OptimizedPathService from "../services/Optimized.Path.service";
-import axios from "axios";
 
 // Components
 import Path from "../components/map/Path";
 import { selectSimulation, trigger } from "../store/states/simulation";
 import { WASMTest } from "../components/WASMTest.tsx";
+import { Node, DeliveryType, Route } from "./types.ts";
+
+import { useContext } from "react";
+
+import { WASMContext } from "../wasmContext";
 
 export default function Home() {
   // const { user, isSignedIn } = useAuth();
@@ -37,23 +40,39 @@ export default function Home() {
   const PLOTTER = new OptimizedPlottingService();
   const simulate = new SimulationService();
   const ps = new PathService();
-
+  
+  
   const mapContainer = useRef(null);
   const map = useRef(null);
-
+  
   const play = useSelector(selectSimulation);
   const [time, setTime] = useState(0);
   const [pathArray, setPathArray] = useState([]);
   const [deliveryCount, setDeliveryCount] = useState(0);
   const [simulateDeliveries, setSimulateDeliveries] = useState(1);
   const [pathCovered, setPathCovered] = useState([]);
+  const [globalDistanceMatrix, setGlobalDistanceMatrix] = useState([[]]);
+  const WASMContext = useContext(WASMContext);
+  
   // const [roadSteps, setRoadSteps] = useState([]);
 
   const tempHub = {
     latitude: 12.972442,
     longitude: 77.580643,
   };
+  
+  const numberOfRiders = 5;
 
+  const initialRequest = () => {
+    let routes = new Array(numberOfRiders).fill(null);
+
+    let node = {
+      delivery_type: 2,
+      index: 1
+    }
+    WASMContext.ctx.invoke_clustering_from_js(routes, node, distanceMatrix, )
+  }
+  
   const [paths, setPaths] = useState([
     [
       {
@@ -137,10 +156,11 @@ export default function Home() {
     plot.setTraffic(map);
 
     const distanceMatrix = await pds.batchDistanceMatrix(
-      originGeoInfo,
-      destGeoInfo
+      [tempHub, ...originGeoInfo],
+      [tempHub, ...destGeoInfo]
     );
-
+    console.log(distanceMatrix);
+    setGlobalDistanceMatrix(distanceMatrix);
     // const tempPathSteps = [];
 
     // // This will store the road version of the origin destination points

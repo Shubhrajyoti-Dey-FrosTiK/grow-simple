@@ -8,5 +8,5 @@ export const WASMTest = () => {
     return <>...</>;
   }
 
-  return <>Computed from WASM: 4+3={ctx.wasm.add(4, 3)}</>;
+  return <>Computed from WASM: 4+3={ctx.wasm.add(3,4)}</>;
 };
