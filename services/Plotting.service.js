@@ -1,5 +1,6 @@
 // Map
 import mapboxgl from "!mapbox-gl";
+import { LIMIT } from "../constants/limit";
 
 const getAngleRadians = (point1, point2) => {
   return Math.atan(
@@ -111,7 +112,7 @@ export default class PlottingService {
     return tempMarker;
   }
 
-  async getRoute(riderPath, route, steps, details, roadPoints) {
+  async getRoute(riderPath, route, steps, details, roadPoints, roadPointsLen) {
     let pointsArray = [];
 
     if (riderPath.length < 2) return;
@@ -139,19 +140,17 @@ export default class PlottingService {
     data.geometry.coordinates.forEach((coordinate) => route.push(coordinate));
     data.legs[0].steps.forEach((step) => steps.push(step));
 
-    const tempRoadPoints = [];
     json.waypoints.forEach((waypoint) =>
-      tempRoadPoints.push({
+      roadPoints[roadPointsLen].push({
         longitude: waypoint.location[0],
         latitude: waypoint.location[1],
       })
     );
-    roadPoints.push(tempRoadPoints);
   }
 
   // Plot the routes
   async route(map, riderPath, routeNo, plotRoute, roadPoints) {
-    const batchRiderPath = this.splitToChunks([...riderPath], 24);
+    const batchRiderPath = this.splitToChunks([...riderPath], LIMIT.DIRECTION);
     const route = [];
     const steps = [];
     const details = {
@@ -159,10 +158,20 @@ export default class PlottingService {
       duration: 0,
     };
 
+    roadPoints.push([]);
+    const roadPointsLen = roadPoints.length - 1;
+
     await Promise.all(
       batchRiderPath.map(
         async (path) =>
-          await this.getRoute(path, route, steps, details, roadPoints)
+          await this.getRoute(
+            path,
+            route,
+            steps,
+            details,
+            roadPoints,
+            roadPointsLen
+          )
       )
     );
 

@@ -54,6 +54,9 @@ export default function Home() {
   const [globalDistanceMatrix, setGlobalDistanceMatrix] = useState([[]]);
   const WASM = useContext(WASMContext).wasm;
   const [originState, setOriginState] = useState([]);
+  const [hasSimulated, setHasSimulated] = useState(false);
+  const [hasExtracted, setHasExtracted] = useState(false);
+  const [simulateHours, setSimulateHours] = useState(0);
 
   const tempHub = {
     latitude: 12.972442,
@@ -88,6 +91,17 @@ export default function Home() {
       driverCoordinates,
       tempOriginState
     );
+
+    console.log(
+      ps.indexToCoordinate(tempOriginState, [
+        [{ index: 1 }, { index: 2 }],
+        [{ index: 3 }],
+      ]),
+      ps.coordinateToIndices(tempOriginState, paths)
+    );
+
+    // We have riderMatrix, nxn matrix
+    // paths -> the path which the rider has to travel
 
     for (let riderIndex = 1; riderIndex < numberOfRiders; riderIndex++) {
       routes = invoke_clustering_from_js(
@@ -220,8 +234,111 @@ export default function Home() {
     // ps.getRoadPointsDuration(tempPathSteps.steps, roadPoints);
   };
 
+  const handleHourSimulate = async () => {
+    setHasSimulated(true);
+    const roadSteps = [];
+    paths.map(() => roadSteps.push([]));
+    await Promise.all(
+      // The path is getting passed which is the modified route. The previous deliveries are removed from the route
+      paths.map(
+        async (path, index) => await handlePlotPath(path, roadSteps, index)
+      )
+    );
+
+    const newPaths = [];
+    roadSteps.forEach((roadStep) => {
+      let tempPath = [];
+      let roadStepDuration = 0;
+      roadStep.forEach((steps) => {
+        steps.forEach((step) => {
+          // Fixing the time
+          tempPath.push({
+            ...step,
+            duration: roadStepDuration + step.duration,
+          });
+        });
+
+        roadStepDuration += steps[steps.length - 1].duration;
+      });
+
+      newPaths.push(tempPath);
+    });
+
+    // Calculate the roadPoints
+    const roadPoints = [];
+    roadSteps.forEach((roadStep) => {
+      const tempRoadPoints = [];
+      let tempTime = 0;
+      roadStep.forEach((step) => {
+        tempRoadPoints.push({
+          ...step[step.length - 1],
+          duration: tempTime + step[step.length - 1].duration,
+        });
+        tempTime += step[step.length - 1].duration;
+      });
+      roadPoints.push(tempRoadPoints);
+    });
+
+    // Calculating the time for n deliveries
+    const nthDeliveryTime = {
+      duration: simulateHours * 60,
+    };
+
+    setDeliveryCount(deliveryCount + simulateDeliveries);
+
+    // Filtering out the route and removing the route which cannot be traversed in the n delivery time
+    const filteredDeliveryRouteForNDeliveries = await OPS.filterNDeliveries(
+      newPaths,
+      nthDeliveryTime.duration
+    );
+
+    // Enumerating the filtered route with smoothened coordinate for animation
+    const smoothCoordinates = await ps.smoothenCoordinates(
+      filteredDeliveryRouteForNDeliveries,
+      nthDeliveryTime.duration
+    );
+
+    // Preparing for the next simulation
+    const newPathForNextSimulation = [];
+    for (let pathIndex = 0; pathIndex < roadPoints.length; pathIndex++) {
+      let stepIndex = 0;
+
+      for (
+        stepIndex = 0;
+        stepIndex < roadPoints[pathIndex].length;
+        stepIndex++
+      ) {
+        if (
+          roadPoints[pathIndex][stepIndex].duration > nthDeliveryTime.duration
+        ) {
+          break;
+        }
+      }
+
+      let tempPath = [
+        smoothCoordinates[pathIndex][smoothCoordinates[pathIndex].length - 1],
+      ];
+      for (
+        let tempIndex = stepIndex;
+        tempIndex < roadPoints[pathIndex].length;
+        tempIndex++
+      ) {
+        // tempPath.push(roadPoints[pathIndex][tempIndex]);
+        tempPath.push(paths[pathIndex][tempIndex + 1]);
+      }
+
+      console.log(newPathForNextSimulation);
+
+      newPathForNextSimulation.push(tempPath);
+    }
+
+    setPaths(newPathForNextSimulation);
+    await asyncSetPathArray(smoothCoordinates);
+  };
+
   const handleExtract = async (updatedOrigins) => {
     setPathArray([]);
+    setHasExtracted(true);
 
     // SET OF ORIGINS / PICKUPS
     const origin = updatedOrigins ? [] : ReduxPickDropContext.pickupPoints;
@@ -264,6 +381,8 @@ export default function Home() {
       tempOriginState,
       tempOriginState
     );
+
+    console.log(originGeoInfo, tempOriginState, paths);
 
     initialRequest(distanceMatrix, timeMatrix, originGeoInfo, tempOriginState);
 
@@ -398,6 +517,7 @@ export default function Home() {
   };
 
   const handleOptimizedNDeliveries = async () => {
+    setHasSimulated(true);
     const roadSteps = [];
     paths.map(() => roadSteps.push([]));
     await Promise.all(
@@ -487,8 +607,11 @@ export default function Home() {
         tempIndex < roadPoints[pathIndex].length;
         tempIndex++
       ) {
-        tempPath.push(roadPoints[pathIndex][tempIndex]);
+        // tempPath.push(roadPoints[pathIndex][tempIndex]);
+        tempPath.push(paths[pathIndex][tempIndex + 1]);
       }
+
+      console.log(newPathForNextSimulation);
 
       newPathForNextSimulation.push(tempPath);
     }
@@ -501,7 +624,7 @@ export default function Home() {
     const updatedDriverState = [];
 
     paths.forEach((path) => {
-      updatedDriverState.push(path[path.length - 1]);
+      updatedDriverState.push(path[0]);
     });
     setDriverCoordinates(updatedDriverState);
     handleExtract(updatedDriverState);
@@ -521,7 +644,7 @@ export default function Home() {
 
   return (
     <main>
-      <div>
+      <div className="max-w-4xl m-auto">
         {/* <Button type="file"></Button> */}
         <Typography order={4}>Upload Data</Typography>
         <div className="flex flex-wrap gap-5">
@@ -531,12 +654,19 @@ export default function Home() {
           <Typography order={4}>Preview Data</Typography>
           <DisplayCSV csv={ReduxPickDropContext.pickupPoints} pickup />
         </div>
-        <Button onClick={() => handleExtract()}>Extract Data</Button>
+        {ReduxPickDropContext.pickupPoints.length ? (
+          <Button className="mt-2 mb-2" onClick={() => handleExtract()}>
+            Extract Data
+          </Button>
+        ) : (
+          <></>
+        )}
+        <Typography order={5}>Visualizer</Typography>
         <div ref={mapContainer} className="map-container h-[50vh]"></div>
         <Typography order={5}>
           Total {deliveryCount} deliveries simulated
         </Typography>
-        {pathArray.length &&
+        {pathArray.length ? (
           pathArray.map((path, pathIndex) => {
             return (
               <Path
@@ -547,18 +677,51 @@ export default function Home() {
                 pathIndex={pathIndex + 1}
               />
             );
-          })}
-      </div>
-      <TextInput
-        value={simulateDeliveries}
-        onChange={(e) => setSimulateDeliveries(Number(e.target.value))}
-        type="number"
-      />
-      <Button onClick={handleOptimizedNDeliveries}>SIMULATE</Button>
+          })
+        ) : (
+          <></>
+        )}
+        {hasExtracted && (
+          <div>
+            <TextInput
+              value={simulateDeliveries}
+              onChange={(e) => setSimulateDeliveries(Number(e.target.value))}
+              type="number"
+              label="Simulate no of deliveries"
+              className="mt-3"
+            />
+            <Button className="mt-2 mb-2" onClick={handleOptimizedNDeliveries}>
+              SIMULATE DELIVERIES
+            </Button>
 
-      <FileInput drop={true} />
-      <DisplayCSV csv={ReduxPickDropContext.dropPoints} />
-      <Button onClick={handleDynamicPoints}>Add dynamic pickup points</Button>
+            <TextInput
+              value={simulateHours}
+              onChange={(e) => setSimulateHours(Number(e.target.value))}
+              type="number"
+              label="Simulate no of hours you want to simulate"
+              className="mt-3"
+            />
+            <Button className="mt-2 mb-2" onClick={handleHourSimulate}>
+              SIMULATE HOURS
+            </Button>
+          </div>
+        )}
+        {hasSimulated && (
+          <div>
+            <FileInput drop={true} />
+            <DisplayCSV csv={ReduxPickDropContext.dropPoints} />
+            {ReduxPickDropContext.dropPoints.length ? (
+              <div>
+                <Button onClick={handleDynamicPoints}>
+                  Add dynamic pickup points
+                </Button>
+              </div>
+            ) : (
+              <></>
+            )}
+          </div>
+        )}
+      </div>
     </main>
   );
 }

@@ -1,4 +1,5 @@
 export const LIMIT = {
   DISTANCE_MATRIX: 2500,
   GEO_ENCODING: 100,
+  DIRECTION: 24,
 };

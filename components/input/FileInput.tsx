@@ -105,7 +105,7 @@ export default function FileInput({
   return (
     <div className="text-center max-w-lg relative">
       <Typography order={4} className="text-bold text-left">
-        {pick ? "Pickup" : "Drop"}
+        {pick ? "Select Drop Points" : "Select Pickup points"}
       </Typography>
       <Dropzone
         openRef={openRef}
@@ -150,7 +150,7 @@ export default function FileInput({
               />
 
               <Typography order={4} size="xl" inline>
-                {pick ? "Pickup" : "Drop"} XLSX
+                {pick ? "Select Drop points" : "Select Pickup Points"} XLSX
               </Typography>
               <Text size="sm" color="dimmed" inline mt={7}>
                 Drag and drop or click to attach {pick ? "Pickup" : "Drop"}

@@ -329,4 +329,50 @@ export default class PathService {
     const len = origin.length + dest.length;
     return [lng / len, lat / len];
   }
+
+  indexToCoordinate(origins, coordinateArray) {
+    const resultantRoutes = [];
+
+    coordinateArray.forEach((coordinates) => {
+      const tempPath = [];
+      coordinates.forEach((coordinate) => {
+        tempPath.push(origins[coordinate.index]);
+      });
+
+      resultantRoutes.push(tempPath);
+    });
+
+    return resultantRoutes;
+  }
+
+  coordinateToIndices(origins, pathArray) {
+    const nodesArray = [];
+
+    console.log(origins);
+
+    pathArray.forEach((path) => {
+      const tempNodes = [];
+      path.forEach((coordinate, coordinateIndex) => {
+        let index = 0;
+
+        // Skipping the first node
+        if (coordinateIndex) {
+          for (let i = 0; i < origins.length; i++) {
+            if (
+              origins[i].latitude == coordinate.latitude &&
+              origins[i].longitude == coordinate.longitude
+            ) {
+              index = i;
+              break;
+            }
+          }
+        }
+        tempNodes.push({ deliveryType: 2, index });
+      });
+
+      nodesArray.push(tempNodes);
+    });
+
+    return nodesArray;
+  }
 }
