@@ -41,3 +41,5 @@ service.json
 firebaseClient.json
 
 .env
+
+/wasm/target
