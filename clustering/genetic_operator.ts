@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 export function stochastic_universal_selection(
   fitness_values: number[],
   num_parents: number
@@ -89,7 +91,9 @@ export function scramble_mutation(individual: number[]) {
 export function orderCrossover(parent1: number[], parent2: number[]) {
   const n = parent1.length;
 
-  const selected = Array.from({ length: 2 }, () => Math.floor(Math.random() * n));
+  const selected = Array.from({ length: 2 }, () =>
+    Math.floor(Math.random() * n)
+  );
   selected.sort((a, b) => a - b);
 
   const child1 = parent1.slice();

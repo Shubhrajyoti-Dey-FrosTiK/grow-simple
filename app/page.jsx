@@ -242,7 +242,12 @@ export default function Home() {
     );
 
     // Now we need to convert the Node into the coordinates
-    const tempPath = ps.indexToCoordinate(tempOriginState, route);
+    const tempPath = ps.indexToCoordinate(
+      tempOriginState,
+      route,
+      paths,
+      tempHub
+    );
 
     console.log(tempPath);
 

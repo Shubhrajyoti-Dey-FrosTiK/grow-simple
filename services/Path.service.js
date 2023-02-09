@@ -328,12 +328,13 @@ export default class PathService {
     return [lng / len, lat / len];
   }
 
-  indexToCoordinate(origins, coordinateArray) {
+  indexToCoordinate(origins, coordinateArray, paths, hub) {
     console.log(coordinateArray);
     const resultantRoutes = [];
 
-    coordinateArray.forEach((coordinates) => {
-      const tempPath = [];
+    coordinateArray.forEach((coordinates, coordinateIndex) => {
+      let tempPath = [hub];
+      if (paths.length) tempPath = [paths[coordinateIndex][0]];
       coordinates.nodes.forEach((coordinate) => {
         tempPath.push(origins[coordinate.index]);
       });
