@@ -1,13 +1,13 @@
 import { genetic_algorithm } from "./genetic_algorithm";
 import { calc_distance, Node, Route } from "./model";
 
-export async function clustering(
+export function clustering(
   node: Node,
   routes: Route[],
   distanceMatrix: number[][],
   timeMatrix: number[][],
   riderMatrix: number[][]
-): Promise<void> {
+): void {
   let minIncrease = Number.MAX_VALUE;
   let minRiderIndex = 0;
   let optimalRider = [...routes][0];

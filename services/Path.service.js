@@ -334,10 +334,12 @@ export default class PathService {
 
     coordinateArray.forEach((coordinates, coordinateIndex) => {
       let tempPath = [hub];
-      if (paths.length) tempPath = [paths[coordinateIndex][0]];
+      if (paths.length && paths.length > coordinateIndex)
+        tempPath = [paths[coordinateIndex][0]];
       coordinates.nodes.forEach((coordinate) => {
         tempPath.push(origins[coordinate.index]);
       });
+      tempPath.push(hub);
 
       resultantRoutes.push(tempPath);
     });

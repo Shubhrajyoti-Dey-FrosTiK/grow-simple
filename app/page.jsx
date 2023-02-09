@@ -68,9 +68,16 @@ export default function Home() {
     tempHub,
     tempHub,
     tempHub,
+    tempHub,
+    tempHub,
+    tempHub,
+    tempHub,
+    tempHub,
+    tempHub,
+    tempHub,
   ]);
 
-  const numberOfRiders = 3;
+  const numberOfRiders = 10;
 
   // const [roadSteps, setRoadSteps] = useState([]);
 
@@ -81,7 +88,17 @@ export default function Home() {
     timeMatrix,
     riderMatrix
   ) => {
-    await clustering(
+    console.log(
+      {
+        index: coordinateIndex,
+        delivery_type: 1,
+      },
+      route,
+      distanceMatrix,
+      timeMatrix,
+      riderMatrix.distanceMatrix
+    );
+    clustering(
       {
         index: coordinateIndex,
         delivery_type: 1,
@@ -241,6 +258,8 @@ export default function Home() {
       })
     );
 
+    console.log(route);
+
     // Now we need to convert the Node into the coordinates
     const tempPath = ps.indexToCoordinate(
       tempOriginState,
@@ -380,6 +399,7 @@ export default function Home() {
   };
 
   const handleExtract = async (updatedOrigins) => {
+    PLOTTER.clearMarkers(map);
     setPathArray([]);
     setHasExtracted(true);
 

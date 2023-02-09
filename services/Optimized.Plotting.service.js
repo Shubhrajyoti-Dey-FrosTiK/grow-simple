@@ -133,4 +133,10 @@ export default class OptimizedPlottingService {
       }
     }
   }
+
+  clearMarkers(map) {
+    const markers = map.current._markers;
+    console.log(markers);
+    markers.forEach((marker) => (marker._element.hidden = true));
+  }
 }
