@@ -64,22 +64,28 @@ export class PickDropService {
       batchItems,
     });
 
+    console.log(geoCoordinates.data);
+
     if (geoCoordinates.data.batchItems) {
       geoCoordinates.data.batchItems.forEach((data) => {
-        const coordinates = data.features[0].geometry.coordinates;
-        if (originGeoInfo.length < origin.length) {
-          originGeoInfo.push({
-            longitude: coordinates[0],
-            latitude: coordinates[1],
-          });
-        } else {
-          destGeoInfo.push({
-            longitude: coordinates[0],
-            latitude: coordinates[1],
-          });
-        }
+        try {
+          const coordinates = data.features[0].geometry.coordinates;
+          if (originGeoInfo.length < origin.length) {
+            originGeoInfo.push({
+              longitude: coordinates[0],
+              latitude: coordinates[1],
+            });
+          } else {
+            destGeoInfo.push({
+              longitude: coordinates[0],
+              latitude: coordinates[1],
+            });
+          }
+        } catch (error) {}
       });
     }
+
+    console.log(originGeoInfo);
   }
 
   // Batch Process Geo Coordinates

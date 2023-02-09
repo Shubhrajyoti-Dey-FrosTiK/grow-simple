@@ -29,7 +29,8 @@ import { Node, DeliveryType, Route } from "./types.ts";
 import { useContext } from "react";
 
 import { WASMContext } from "../wasmContext";
-import { invoke_clustering_from_js } from "../wasm/pkg/wasm.js";
+
+import { clustering } from "../clustering/clustering";
 
 export default function Home() {
   // const { user, isSignedIn } = useAuth();
@@ -69,49 +70,27 @@ export default function Home() {
     tempHub,
   ]);
 
+  const numberOfRiders = 3;
+
   // const [roadSteps, setRoadSteps] = useState([]);
 
-  const numberOfRiders = 5;
-
-  const initialRequest = async (
+  const calculatePath = async (
+    route,
+    coordinateIndex,
     distanceMatrix,
     timeMatrix,
-    originGeoInfo,
-    tempOriginState
+    riderMatrix
   ) => {
-    let routes = new Array(numberOfRiders).fill({ nodes: [] });
-    let riderCoordinates = [];
-    pathArray.forEach((path) => riderCoordinates.push(path[path.length - 1]));
-
-    if (!riderCoordinates.length) {
-      riderCoordinates.push(tempHub);
-    }
-
-    let riderMatrix = await pds.batchDistanceMatrix(
-      driverCoordinates,
-      tempOriginState
+    await clustering(
+      {
+        index: coordinateIndex,
+        delivery_type: 1,
+      },
+      route,
+      distanceMatrix,
+      timeMatrix,
+      riderMatrix.distanceMatrix
     );
-
-    console.log(
-      ps.indexToCoordinate(tempOriginState, [
-        [{ index: 1 }, { index: 2 }],
-        [{ index: 3 }],
-      ]),
-      ps.coordinateToIndices(tempOriginState, paths)
-    );
-
-    // We have riderMatrix, nxn matrix
-    // paths -> the path which the rider has to travel
-
-    for (let riderIndex = 1; riderIndex < numberOfRiders; riderIndex++) {
-      routes = invoke_clustering_from_js(
-        routes,
-        { delivery_type: 2, index: riderIndex },
-        distanceMatrix,
-        timeMatrix,
-        riderMatrix
-      );
-    }
   };
 
   const [originalPaths, setOriginalPaths] = useState([
@@ -221,6 +200,67 @@ export default function Home() {
       },
     ],
   ]);
+
+  const initialRequest = async (
+    distanceMatrix,
+    timeMatrix,
+    originGeoInfo,
+    tempOriginState
+  ) => {
+    let routes = new Array(numberOfRiders).fill({ nodes: [] });
+    let riderCoordinates = [];
+    pathArray.forEach((path) => riderCoordinates.push(path[path.length - 1]));
+
+    if (!riderCoordinates.length) {
+      riderCoordinates.push(tempHub);
+    }
+
+    let riderMatrix = await pds.batchDistanceMatrix(
+      driverCoordinates,
+      tempOriginState
+    );
+
+    const route = [];
+    for (let i = 0; i < numberOfRiders; i++)
+      route.push({
+        nodes: [],
+      });
+
+    // So here we will get a Array of Paths according to the driver datra
+    await Promise.all(
+      tempOriginState.map(async (coordinate, coordinateIndex) => {
+        if (coordinateIndex) {
+          await calculatePath(
+            route,
+            coordinateIndex,
+            distanceMatrix,
+            timeMatrix,
+            riderMatrix
+          );
+        }
+      })
+    );
+
+    // Now we need to convert the Node into the coordinates
+    const tempPath = ps.indexToCoordinate(tempOriginState, route);
+
+    console.log(tempPath);
+
+    // Set the path
+    setPaths(tempPath);
+
+    const roadSteps = [];
+    tempPath.map(() => roadSteps.push([]));
+    await Promise.all(
+      // The path is getting passed which is the modified route. The previous deliveries are removed from the route
+      tempPath.map(
+        async (path, index) =>
+          await handlePlotPath(path, roadSteps, index, true)
+      )
+    );
+  };
+
+  console.log(paths);
 
   const handlePlotPath = async (path, roadSteps, routeNo, plot) => {
     const tempPathSteps = await PLOTTER.route(
@@ -405,15 +445,15 @@ export default function Home() {
     //   )
     // );
 
-    const roadSteps = [];
-    paths.map(() => roadSteps.push([]));
-    await Promise.all(
-      // The path is getting passed which is the modified route. The previous deliveries are removed from the route
-      paths.map(
-        async (path, index) =>
-          await handlePlotPath(path, roadSteps, index, true)
-      )
-    );
+    // const roadSteps = [];
+    // paths.map(() => roadSteps.push([]));
+    // await Promise.all(
+    //   // The path is getting passed which is the modified route. The previous deliveries are removed from the route
+    //   paths.map(
+    //     async (path, index) =>
+    //       await handlePlotPath(path, roadSteps, index, true)
+    //   )
+    // );
 
     // setRoadSteps(tempRoadSteps);
   };

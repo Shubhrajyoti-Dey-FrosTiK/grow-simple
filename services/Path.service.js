@@ -329,11 +329,12 @@ export default class PathService {
   }
 
   indexToCoordinate(origins, coordinateArray) {
+    console.log(coordinateArray);
     const resultantRoutes = [];
 
     coordinateArray.forEach((coordinates) => {
       const tempPath = [];
-      coordinates.forEach((coordinate) => {
+      coordinates.nodes.forEach((coordinate) => {
         tempPath.push(origins[coordinate.index]);
       });
 
