@@ -60,24 +60,12 @@ export default function Home() {
   const [simulateHours, setSimulateHours] = useState(0);
 
   const tempHub = {
-    latitude: 12.972442,
-    longitude: 77.580643,
+    // latitude: 12.972442,
+    // longitude: 77.580643,
+    latitude: 12.910879,
+    longitude: 77.579716,
   };
-
-  const [driverCoordinates, setDriverCoordinates] = useState([
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-  ]);
-
-  const numberOfRiders = 3;
+  const [driverCoordinates, setDriverCoordinates] = useState([]);
 
   // const [roadSteps, setRoadSteps] = useState([]);
 
@@ -98,6 +86,7 @@ export default function Home() {
       timeMatrix,
       riderMatrix.distanceMatrix
     );
+    console.time("clusterin start");
     clustering(
       {
         index: coordinateIndex,
@@ -108,6 +97,7 @@ export default function Home() {
       timeMatrix,
       riderMatrix.distanceMatrix
     );
+    console.timeEnd("Clustering End");
   };
 
   const [originalPaths, setOriginalPaths] = useState([
@@ -218,15 +208,21 @@ export default function Home() {
     ],
   ]);
 
+  console.log("paths", paths);
+
   const initialRequest = async (
     distanceMatrix,
     timeMatrix,
     originGeoInfo,
     tempOriginState
   ) => {
+    const numberOfRiders = Math.ceil(originState.length / 25);
+    if (!paths.length)
+      setDriverCoordinates(new Array(numberOfRiders).fill(tempHub));
+
     let routes = new Array(numberOfRiders).fill({ nodes: [] });
     let riderCoordinates = [];
-    pathArray.forEach((path) => riderCoordinates.push(path[path.length - 1]));
+    paths.forEach((path) => riderCoordinates.push(path[0]));
 
     if (!riderCoordinates.length) {
       riderCoordinates.push(tempHub);
@@ -258,7 +254,7 @@ export default function Home() {
       })
     );
 
-    console.log(route);
+    console.log("route", route);
 
     // Now we need to convert the Node into the coordinates
     const tempPath = ps.indexToCoordinate(

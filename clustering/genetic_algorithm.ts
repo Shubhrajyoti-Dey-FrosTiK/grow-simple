@@ -55,7 +55,7 @@ function num_del_fit(num_delivery: number) {
   if (num_delivery < max_size - 5) {
     return 1;
   }
-  return 1 / num_delivery;
+  return (1 / num_delivery) * 10;
 }
 
 function fitness_function(
@@ -68,7 +68,8 @@ function fitness_function(
   const d = get_distance(path, distance_matrix, rider_index, rider_matrix);
   const t = get_time(path, time_matrix);
   const delivery_size_fitness = num_del_fit(path.length);
-  return Math.exp(-d / 100) * (1 / (1 + t)) * delivery_size_fitness;
+  // console.log("path_length", path.length);
+  return Math.exp(-d / 100) * (1 / (1 + t)) * Math.exp(path.length);
 }
 
 function get_fitness_values(
@@ -100,6 +101,7 @@ export function genetic_algorithm(
   rider_index: number,
   route: Route
 ): [number, number[]] {
+  console.log("genetic algo");
   const population_size = 200;
   const iterations = 500;
   const mutation_probability = 0.1;
