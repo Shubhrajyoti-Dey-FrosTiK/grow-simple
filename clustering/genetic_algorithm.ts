@@ -19,13 +19,19 @@ function get_distance(
   let distance =
     rider_matrix[rider_index][path[0] - 1] + distance_matrix[end][0];
   if (!distance)
-    // console.log(distance, rider_index, path[0], rider_matrix[rider_index][path[0]], distance_matrix[end][0])
+    console.log(
+      distance,
+      rider_index,
+      path[0],
+      rider_matrix[rider_index][path[0]],
+      distance_matrix[end][0]
+    );
 
-    for (let index = 0; index < path.length - 1; index++) {
-      const idx1 = path[index];
-      const idx2 = path[index + 1];
-      distance += distance_matrix[idx1][idx2];
-    }
+  for (let index = 0; index < path.length - 1; index++) {
+    const idx1 = path[index];
+    const idx2 = path[index + 1];
+    distance += distance_matrix[idx1][idx2];
+  }
   if (!distance) {
     // console.log(distance, distance_matrix, path);
   }
@@ -44,6 +50,14 @@ function get_time(path: number[], time_matrix: number[][]) {
   return time;
 }
 
+function num_del_fit(num_delivery: number) {
+  const max_size = 30;
+  if (num_delivery < max_size - 5) {
+    return 1;
+  }
+  return 1 / num_delivery;
+}
+
 function fitness_function(
   path: number[],
   rider_index: number,
@@ -53,7 +67,8 @@ function fitness_function(
 ) {
   const d = get_distance(path, distance_matrix, rider_index, rider_matrix);
   const t = get_time(path, time_matrix);
-  return Math.exp(-d / 100) * (1 / (1 + t));
+  const delivery_size_fitness = num_del_fit(path.length);
+  return Math.exp(-d / 100) * (1 / (1 + t)) * delivery_size_fitness;
 }
 
 function get_fitness_values(

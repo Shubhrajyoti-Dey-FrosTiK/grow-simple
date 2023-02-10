@@ -77,7 +77,7 @@ export default function Home() {
     tempHub,
   ]);
 
-  const numberOfRiders = 10;
+  const numberOfRiders = 3;
 
   // const [roadSteps, setRoadSteps] = useState([]);
 

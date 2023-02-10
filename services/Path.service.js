@@ -339,7 +339,12 @@ export default class PathService {
       coordinates.nodes.forEach((coordinate) => {
         tempPath.push(origins[coordinate.index]);
       });
-      tempPath.push(hub);
+
+      if (
+        tempPath[tempPath.length - 1].latitude != hub.latitude ||
+        tempPath[tempPath.length - 1].longitude != hub.longitude
+      )
+        tempPath.push(hub);
 
       resultantRoutes.push(tempPath);
     });

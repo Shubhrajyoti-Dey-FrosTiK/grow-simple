@@ -1,9 +1,9 @@
-Initial call
+Dynamic driver number selection
+Dynamic pickup point support bug fixes
+Dynamic pickup point coordinate plotting bug fix
+Build custom distance matrix server
+Make the new API compatible
 
-n x n Distance Matrix (Including Hub 0th index)
--> Returns index array of array
+<!-- Optimisation  team  -->
 
-Next call
-
-(n + m) x (n + m) Distance Matrix
-Driver Location x (n + m) Distance Matrix
+Check algo
