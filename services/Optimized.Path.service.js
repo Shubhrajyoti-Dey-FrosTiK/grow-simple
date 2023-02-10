@@ -28,7 +28,6 @@ export default class OptimizedPathService {
       filteredDeliveries.push(tempDeliveries);
     });
 
-    console.log(filteredDeliveries);
     return filteredDeliveries;
   }
 

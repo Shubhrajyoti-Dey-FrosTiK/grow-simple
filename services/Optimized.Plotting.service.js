@@ -44,6 +44,8 @@ export default class OptimizedPlottingService {
     // Capture the path which is the most recommended
     const data = json.routes[0];
 
+    console.log(json);
+
     // This duration will include all the legs
     let duration = 0;
     let tempRoadSteps = [];

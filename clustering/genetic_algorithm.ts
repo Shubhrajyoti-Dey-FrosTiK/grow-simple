@@ -8,7 +8,7 @@ import {
 } from "./genetic_operator";
 import { Route } from "./model";
 
-function get_distance(
+export function get_distance(
   path: number[],
   distance_matrix: number[][],
   rider_index: number,
@@ -23,9 +23,6 @@ function get_distance(
     const idx1 = path[index];
     const idx2 = path[index + 1];
     distance += distance_matrix[idx1][idx2];
-  }
-  if (!distance) {
-    // console.log(distance, distance_matrix, path);
   }
 
   return distance;
@@ -42,14 +39,6 @@ function get_time(path: number[], time_matrix: number[][]) {
   return time;
 }
 
-function num_del_fit(num_delivery: number) {
-  const max_size = 30;
-  if (num_delivery < max_size - 5) {
-    return 1;
-  }
-  return (1 / num_delivery) * 10;
-}
-
 function fitness_function(
   path: number[],
   rider_index: number,
@@ -59,9 +48,7 @@ function fitness_function(
 ) {
   const d = get_distance(path, distance_matrix, rider_index, rider_matrix);
   const t = get_time(path, time_matrix);
-  const delivery_size_fitness = num_del_fit(path.length);
-  // console.log("path_length", path.length);
-  return Math.exp(-d / 100) * (1 / (1 + t)) * Math.exp(path.length);
+  return Math.exp(-d / 100) * (1 / (1 + t));
 }
 
 function get_fitness_values(
@@ -93,7 +80,7 @@ export function genetic_algorithm(
   rider_index: number,
   route: Route
 ): [number, number[]] {
-  const population_size = 200;
+  const population_size = 100;
   const iterations = 500;
   const mutation_probability = 0.1;
 

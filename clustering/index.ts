@@ -56,7 +56,6 @@ let node2: Node = {
 };
 
 clustering(node2, routes, distance_matrix, time_matrix, rider_matrix);
-routes.forEach((route) => console.log(route));
 
 let node3: Node = {
   delivery_type: DeliveryType.Delivery,
@@ -64,4 +63,3 @@ let node3: Node = {
 };
 
 clustering(node3, routes, distance_matrix, time_matrix, rider_matrix);
-routes.forEach((route) => console.log(route));

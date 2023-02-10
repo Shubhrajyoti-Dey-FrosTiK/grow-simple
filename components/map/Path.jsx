@@ -31,7 +31,6 @@ function Path({ path, map, pathIndex, smoothenedCoordinates }) {
       pathIndex,
       smoothenedCoordinates
     );
-    // await sleep(1000);
     setMarker(tempMarker);
     setIndex(index + 1);
   };

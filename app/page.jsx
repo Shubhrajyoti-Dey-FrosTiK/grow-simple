@@ -74,6 +74,10 @@ export default function Home() {
     return matrix[0].map((col, i) => matrix.map((row) => row[i]));
   }
 
+  function onlyUnique(value, index, array) {
+    return self.indexOf(value) === index;
+  }
+
   const calculatePath = (
     route,
     coordinateIndex,
@@ -162,8 +166,6 @@ export default function Home() {
 
     setDriverCount(noOfRiders);
 
-    console.log(tempOriginState, distanceMatrix);
-
     let routes = new Array(noOfRiders).fill({ nodes: [] });
     const newDriverCoordinates = [...driverCoordinates];
 
@@ -186,9 +188,7 @@ export default function Home() {
         nodes: [],
       });
     }
-    console.log(route);
 
-    console.log([...route], distanceMatrix, timeMatrix, riderMatrix);
     // So here we will get a Array of Paths according to the driver datra
 
     tempOriginState.map((coordinate, coordinateIndex) => {
@@ -201,7 +201,7 @@ export default function Home() {
           riderMatrix
         );
       }
-      console.log(route);
+      console.log(coordinateIndex);
     });
 
     // Now we need to convert the Node into the coordinates
@@ -373,13 +373,21 @@ export default function Home() {
       zoom: 11,
     });
 
+    console.log([
+      ...new Set(
+        [tempHub, ...originGeoInfo, ...destGeoInfo].map((item) => item)
+      ),
+    ]);
+
+    map.current.addControl(new mapboxgl.FullscreenControl());
+
     // This will plot the markers
     plot.points(
       map,
+      tempOriginState,
       updatedOrigins
-        ? destGeoInfo
-        : [tempHub, ...originGeoInfo, ...destGeoInfo],
-      originGeoInfo.length
+        ? tempOriginState.length - destGeoInfo.length
+        : tempOriginState.length
     );
 
     plot.setTraffic(map);
