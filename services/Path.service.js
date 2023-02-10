@@ -329,7 +329,6 @@ export default class PathService {
   }
 
   indexToCoordinate(origins, coordinateArray, paths, hub) {
-    console.log(coordinateArray);
     const resultantRoutes = [];
 
     coordinateArray.forEach((coordinates, coordinateIndex) => {
@@ -354,8 +353,6 @@ export default class PathService {
 
   coordinateToIndices(origins, pathArray) {
     const nodesArray = [];
-
-    console.log(origins);
 
     pathArray.forEach((path) => {
       const tempNodes = [];

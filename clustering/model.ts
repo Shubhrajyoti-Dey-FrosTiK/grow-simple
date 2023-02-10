@@ -16,7 +16,7 @@ export function calc_distance(
   route: Route,
   distance_matrix: number[][]
 ): number {
-  console.log(route);
+  // console.log(route);
   const nodes = route.nodes;
   let sum = 0;
   for (let index = 0; index < nodes.length - 1; index++) {

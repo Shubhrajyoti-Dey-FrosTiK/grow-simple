@@ -48,4 +48,5 @@ export function clustering(
   }
 
   routes[minRiderIndex] = optimalRider;
+  console.log(minRiderIndex);
 }

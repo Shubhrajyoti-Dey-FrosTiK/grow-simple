@@ -60,15 +60,21 @@ export default function Home() {
   const [simulateHours, setSimulateHours] = useState(0);
 
   const tempHub = {
-    latitude: 12.972442,
-    longitude: 77.580643,
+    // latitude: 12.972442,
+    // longitude: 77.580643,
+    latitude: 12.910879,
+    longitude: 77.579716,
   };
-
   const [driverCoordinates, setDriverCoordinates] = useState([]);
+  const [driverCount, setDriverCount] = useState(0);
 
   // const [roadSteps, setRoadSteps] = useState([]);
 
-  const calculatePath = async (
+  function transpose(matrix) {
+    return matrix[0].map((col, i) => matrix.map((row) => row[i]));
+  }
+
+  const calculatePath = (
     route,
     coordinateIndex,
     distanceMatrix,
@@ -83,7 +89,7 @@ export default function Home() {
       route,
       distanceMatrix,
       timeMatrix,
-      riderMatrix.distanceMatrix
+      transpose(riderMatrix.distanceMatrix)
     );
   };
 
@@ -141,59 +147,9 @@ export default function Home() {
     ],
   ]);
 
-  const [paths, setPaths] = useState([
-    [
-      {
-        latitude: 12.972442,
-        longitude: 77.580643,
-      },
-      {
-        longitude: 77.5816906,
-        latitude: 12.8927062,
-      },
-      {
-        latitude: 12.972442,
-        longitude: 77.580643,
-      },
-    ],
-    [
-      {
-        latitude: 12.972442,
-        longitude: 77.580643,
-      },
-      {
-        longitude: 77.5454111,
-        latitude: 12.9414398,
-      },
-      {
-        latitude: 12.972442,
-        longitude: 77.580643,
-      },
-    ],
+  const [paths, setPaths] = useState([]);
 
-    [
-      {
-        latitude: 12.972442,
-        longitude: 77.580643,
-      },
-      {
-        longitude: 77.5454111,
-        latitude: 12.9414398,
-      },
-      {
-        longitude: 77.5855952,
-        latitude: 12.9128212,
-      },
-      {
-        longitude: 77.5454111,
-        latitude: 12.9414398,
-      },
-      {
-        latitude: 12.972442,
-        longitude: 77.580643,
-      },
-    ],
-  ]);
+  console.log("paths", paths);
 
   const initialRequest = async (
     distanceMatrix,
@@ -201,7 +157,12 @@ export default function Home() {
     originGeoInfo,
     tempOriginState
   ) => {
-    const noOfRiders = Math.abs(Math.floor(tempOriginState.length / 25)) + 1;
+    const noOfRiders =
+      driverCount || Math.abs(Math.floor(tempOriginState.length / 25)) + 2;
+
+    setDriverCount(noOfRiders);
+
+    console.log(tempOriginState, distanceMatrix);
 
     let routes = new Array(noOfRiders).fill({ nodes: [] });
     const newDriverCoordinates = [...driverCoordinates];
@@ -220,25 +181,28 @@ export default function Home() {
     );
 
     const route = [];
-    for (let i = 0; i < noOfRiders; i++)
+    for (let i = 0; i < noOfRiders; i++) {
       route.push({
         nodes: [],
       });
+    }
+    console.log(route);
 
+    console.log([...route], distanceMatrix, timeMatrix, riderMatrix);
     // So here we will get a Array of Paths according to the driver datra
-    await Promise.all(
-      tempOriginState.map(async (coordinate, coordinateIndex) => {
-        if (coordinateIndex) {
-          await calculatePath(
-            route,
-            coordinateIndex,
-            distanceMatrix,
-            timeMatrix,
-            riderMatrix
-          );
-        }
-      })
-    );
+
+    tempOriginState.map((coordinate, coordinateIndex) => {
+      if (coordinateIndex) {
+        calculatePath(
+          route,
+          coordinateIndex,
+          distanceMatrix,
+          timeMatrix,
+          riderMatrix
+        );
+      }
+      console.log(route);
+    });
 
     // Now we need to convert the Node into the coordinates
     const tempPath = ps.indexToCoordinate(
@@ -261,8 +225,6 @@ export default function Home() {
       )
     );
   };
-
-  console.log(paths);
 
   const handlePlotPath = async (path, roadSteps, routeNo, plot) => {
     const tempPathSteps = await PLOTTER.route(
@@ -377,9 +339,11 @@ export default function Home() {
   };
 
   const handleExtract = async (updatedOrigins) => {
-    PLOTTER.clearMarkers(map);
+    // PLOTTER.clearMarkers(map);
     setPathArray([]);
     setHasExtracted(true);
+
+    map.current = null;
 
     // SET OF ORIGINS / PICKUPS
     const origin = updatedOrigins ? [] : ReduxPickDropContext.dropPoints;
@@ -412,16 +376,22 @@ export default function Home() {
     // This will plot the markers
     plot.points(
       map,
-      [tempHub, ...originGeoInfo, ...destGeoInfo],
+      updatedOrigins
+        ? destGeoInfo
+        : [tempHub, ...originGeoInfo, ...destGeoInfo],
       originGeoInfo.length
     );
 
     plot.setTraffic(map);
 
-    const { distanceMatrix, timeMatrix } = await pds.batchDistanceMatrix(
+    console.log(tempOriginState);
+
+    const { distanceMatrix, timeMatrix } = await OPS.batchDistanceMatrix(
       tempOriginState,
       tempOriginState
     );
+
+    console.log(distanceMatrix, timeMatrix);
 
     initialRequest(distanceMatrix, timeMatrix, originGeoInfo, tempOriginState);
 
@@ -669,15 +639,16 @@ export default function Home() {
 
   mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN;
 
-  useEffect(() => {
-    if (map.current) return; // initialize map only once
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: "mapbox://styles/mapbox/streets-v12",
-      center: [10, 10],
-      zoom: 10,
-    });
-  });
+  // useEffect(() => {
+  //   if (map.current) return; // initialize map only once
+  //   map.current = new mapboxgl.Map({
+  //     container: mapContainer.current,
+  //     style: "mapbox://styles/mapbox/streets-v12",
+  //     center: [10, 10],
+  //     zoom: 10,
+  //   });
+
+  // });
 
   return (
     <main>

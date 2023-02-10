@@ -24,6 +24,7 @@ export default class PlottingService {
 
   // Plot the points on the map
   async points(map, riderPath, originLen) {
+    console.log(riderPath);
     riderPath.forEach((pathPoint, index) => {
       if (!index)
         new mapboxgl.Marker({

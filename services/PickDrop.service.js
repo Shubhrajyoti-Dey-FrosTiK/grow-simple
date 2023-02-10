@@ -64,8 +64,6 @@ export class PickDropService {
       batchItems,
     });
 
-    console.log(geoCoordinates.data);
-
     if (geoCoordinates.data.batchItems) {
       geoCoordinates.data.batchItems.forEach((data) => {
         try {
@@ -84,8 +82,6 @@ export class PickDropService {
         } catch (error) {}
       });
     }
-
-    console.log(originGeoInfo);
   }
 
   // Batch Process Geo Coordinates
@@ -93,9 +89,21 @@ export class PickDropService {
     const processedData = [];
 
     // CONVERTING THE DATA INTO THE API COMPATIBLE FORM
-    [...origin, ...dest].forEach((sample) =>
-      processedData.push({ addressLine: sample.location })
-    );
+    [...origin, ...dest].forEach((sample) => {
+      let location = sample.location;
+
+      if (
+        location.toLowerCase().includes("Bangalore") ||
+        location.toLowerCase().includes("Bengaluru")
+      ) {
+        location += ", Bangalore";
+      }
+      processedData.push({
+        addressLine: location,
+        locality: "Bangalore",
+        adminDistrict: "Karnataka",
+      });
+    });
 
     const batchedProcessedData = this.splitToChunks(
       processedData,
@@ -121,6 +129,7 @@ export class PickDropService {
     return {
       originGeoInfo,
       destGeoInfo,
+      processedData,
     };
   }
 
