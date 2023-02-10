@@ -64,20 +64,7 @@ export default function Home() {
     longitude: 77.580643,
   };
 
-  const [driverCoordinates, setDriverCoordinates] = useState([
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-    tempHub,
-  ]);
-
-  const numberOfRiders = 3;
+  const [driverCoordinates, setDriverCoordinates] = useState([]);
 
   // const [roadSteps, setRoadSteps] = useState([]);
 
@@ -88,16 +75,6 @@ export default function Home() {
     timeMatrix,
     riderMatrix
   ) => {
-    console.log(
-      {
-        index: coordinateIndex,
-        delivery_type: 1,
-      },
-      route,
-      distanceMatrix,
-      timeMatrix,
-      riderMatrix.distanceMatrix
-    );
     clustering(
       {
         index: coordinateIndex,
@@ -224,21 +201,26 @@ export default function Home() {
     originGeoInfo,
     tempOriginState
   ) => {
-    let routes = new Array(numberOfRiders).fill({ nodes: [] });
-    let riderCoordinates = [];
-    pathArray.forEach((path) => riderCoordinates.push(path[path.length - 1]));
+    const noOfRiders = Math.abs(Math.floor(tempOriginState.length / 25)) + 1;
 
-    if (!riderCoordinates.length) {
-      riderCoordinates.push(tempHub);
+    let routes = new Array(noOfRiders).fill({ nodes: [] });
+    const newDriverCoordinates = [...driverCoordinates];
+
+    if (!newDriverCoordinates.length) {
+      for (let i = 0; i < noOfRiders; i++) {
+        newDriverCoordinates.push(tempHub);
+      }
     }
 
+    setDriverCoordinates(newDriverCoordinates);
+
     let riderMatrix = await pds.batchDistanceMatrix(
-      driverCoordinates,
+      newDriverCoordinates,
       tempOriginState
     );
 
     const route = [];
-    for (let i = 0; i < numberOfRiders; i++)
+    for (let i = 0; i < noOfRiders; i++)
       route.push({
         nodes: [],
       });
@@ -258,8 +240,6 @@ export default function Home() {
       })
     );
 
-    console.log(route);
-
     // Now we need to convert the Node into the coordinates
     const tempPath = ps.indexToCoordinate(
       tempOriginState,
@@ -267,8 +247,6 @@ export default function Home() {
       paths,
       tempHub
     );
-
-    console.log(tempPath);
 
     // Set the path
     setPaths(tempPath);

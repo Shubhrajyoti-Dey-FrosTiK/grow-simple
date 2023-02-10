@@ -18,14 +18,6 @@ function get_distance(
   // console.log(end, path);
   let distance =
     rider_matrix[rider_index][path[0] - 1] + distance_matrix[end][0];
-  if (!distance)
-    console.log(
-      distance,
-      rider_index,
-      path[0],
-      rider_matrix[rider_index][path[0]],
-      distance_matrix[end][0]
-    );
 
   for (let index = 0; index < path.length - 1; index++) {
     const idx1 = path[index];
