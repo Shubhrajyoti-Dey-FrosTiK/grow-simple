@@ -207,7 +207,7 @@ export default function Home() {
 
     setDriverCoordinates(newDriverCoordinates);
 
-    let riderMatrix = await pds.batchDistanceMatrix(
+    let riderMatrix = await OPS.batchDistanceMatrix(
       newDriverCoordinates,
       tempOriginState
     );
@@ -446,6 +446,8 @@ export default function Home() {
       tempOriginState,
       tempOriginState
     );
+
+    console.log(distanceMatrix);
 
     initialRequest(distanceMatrix, timeMatrix, originGeoInfo, tempOriginState);
 

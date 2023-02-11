@@ -84,19 +84,28 @@ export class PickDropService {
     }
   }
 
+  sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   // Batch Process Geo Coordinates
   async batchGeoCoordinates(origin, dest) {
     const processedData = [];
 
+    console.log([...origin, ...dest]);
+
     // CONVERTING THE DATA INTO THE API COMPATIBLE FORM
     [...origin, ...dest].forEach((sample) => {
       let location = sample.location;
-
-      if (
-        location.toLowerCase().includes("Bangalore") ||
-        location.toLowerCase().includes("Bengaluru")
-      ) {
-        location += ", Bangalore";
+      try {
+        if (
+          location.toLowerCase().includes("Bangalore") ||
+          location.toLowerCase().includes("Bengaluru")
+        ) {
+          location += ", Bangalore";
+        }
+      } catch (error) {
+        console.log(location);
       }
       processedData.push({
         addressLine: location,
@@ -187,16 +196,17 @@ export class PickDropService {
 
     // Populate all the rows
     await Promise.all(
-      destBatch.map(
-        async (dest, index) =>
-          await this.distanceMatrix(
-            originGeoInfo,
-            dest,
-            distanceMatrix,
-            timeMatrix,
-            Math.floor(index * (LIMIT.DISTANCE_MATRIX / originGeoInfo.length))
-          )
-      )
+      destBatch.map(async (dest, index) => {
+        await this.distanceMatrix(
+          originGeoInfo,
+          dest,
+          distanceMatrix,
+          timeMatrix,
+          Math.floor(index * (LIMIT.DISTANCE_MATRIX / originGeoInfo.length))
+        );
+        this.sleep(20000);
+        console.log("Distance matrix:", index);
+      })
     );
 
     return { distanceMatrix, timeMatrix };

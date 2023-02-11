@@ -33,6 +33,7 @@ function Path({ path, map, pathIndex, smoothenedCoordinates }) {
     );
     setMarker(tempMarker);
     setIndex(index + 1);
+    sleep(10);
   };
 
   useEffect(() => {

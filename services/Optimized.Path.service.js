@@ -70,6 +70,10 @@ export default class OptimizedPathService {
     );
   }
 
+  async sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
   // Batch Process Distance Matrix
   async batchDistanceMatrix(og, dg) {
     const originGeoInfo = [...og];
@@ -93,18 +97,50 @@ export default class OptimizedPathService {
     }
 
     // Populate all the rows
-    await Promise.all(
-      destBatch.map(
-        async (dest, index) =>
-          await this.getDistanceMatrix(
-            originGeoInfo,
-            dest,
-            distanceMatrix,
-            timeMatrix,
-            Math.floor(index * (LIMIT.DISTANCE_MATRIX / originGeoInfo.length))
-          )
-      )
-    );
+    // Promise.raceAll = () => {
+    //   return Promise.all(
+    //     destBatch.map(async (dest, index) => {
+    //       console.log("Distance Matrix:", index);
+    //       return Promise.race([
+    //         await this.getDistanceMatrix(
+    //           originGeoInfo,
+    //           dest,
+    //           distanceMatrix,
+    //           timeMatrix,
+    //           Math.floor(index * (LIMIT.DISTANCE_MATRIX / originGeoInfo.length))
+    //         ),
+    //         await this.sleep(10000),
+    //       ]);
+    //     })
+    //   );
+    // };
+
+    // destBatch.map(async (dest, index) => {
+    //   await Promise.all(async () => {
+    //     await this.getDistanceMatrix(
+    //       originGeoInfo,
+    //       dest,
+    //       distanceMatrix,
+    //       timeMatrix,
+    //       Math.floor(index * (LIMIT.DISTANCE_MATRIX / originGeoInfo.length))
+    //     );
+
+    //     await this.sleep(10000);
+    //     console.log("Distance Matrix: " + index);
+    //   });
+    // });
+
+    for (let i = 0; i < destBatch.length; i++) {
+      await this.getDistanceMatrix(
+        originGeoInfo,
+        destBatch[i],
+        distanceMatrix,
+        timeMatrix,
+        Math.floor(i * (LIMIT.DISTANCE_MATRIX / originGeoInfo.length))
+      );
+      console.log("Distance Matrix: " + i);
+      await this.sleep(5000);
+    }
 
     return { distanceMatrix, timeMatrix };
   }
