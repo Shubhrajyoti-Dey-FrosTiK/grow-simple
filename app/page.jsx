@@ -31,6 +31,7 @@ import { useContext } from "react";
 import { WASMContext } from "../wasmContext";
 
 import { clustering } from "../clustering/clustering";
+import { spawn, Worker, Thread } from "threads";
 
 export default function Home() {
   // const { user, isSignedIn } = useAuth();
@@ -58,6 +59,20 @@ export default function Home() {
   const [hasSimulated, setHasSimulated] = useState(false);
   const [hasExtracted, setHasExtracted] = useState(false);
   const [simulateHours, setSimulateHours] = useState(0);
+  const [loadingState, setLoadingState] = useState("");
+
+  const worker = useRef();
+  useEffect(() => {
+    if (!worker.current) {
+      const load = async () => {
+        worker.current = await spawn(
+          new Worker(new URL("../worker/calculate.js", import.meta.url))
+        );
+      };
+      load();
+    }
+    return () => worker.current && Thread.terminate(worker.current);
+  }, []);
 
   const tempHub = {
     // latitude: 12.972442,
@@ -69,10 +84,6 @@ export default function Home() {
   const [driverCount, setDriverCount] = useState(0);
 
   // const [roadSteps, setRoadSteps] = useState([]);
-
-  function transpose(matrix) {
-    return matrix[0].map((col, i) => matrix.map((row) => row[i]));
-  }
 
   function onlyUnique(value, index, array) {
     return self.indexOf(value) === index;
@@ -96,6 +107,25 @@ export default function Home() {
       transpose(riderMatrix.distanceMatrix)
     );
   };
+
+  function transpose(matrix) {
+    return matrix[0].map((col, i) => matrix.map((row) => row[i]));
+  }
+
+  // const calculatePath = async (
+  //   route,
+  //   distanceMatrix,
+  //   timeMatrix,
+  //   riderMatrix
+  // ) => {
+  //   await worker.current.clusteringSW(
+  //     route,
+  //     distanceMatrix,
+  //     timeMatrix,
+  //     riderMatrix
+  //   );
+  //   console.log("Eneded");
+  // };
 
   const [originalPaths, setOriginalPaths] = useState([
     [
@@ -182,6 +212,8 @@ export default function Home() {
       tempOriginState
     );
 
+    setLoadingState("Calculating Route Order ...");
+
     const route = [];
     for (let i = 0; i < noOfRiders; i++) {
       route.push({
@@ -191,29 +223,41 @@ export default function Home() {
 
     // So here we will get a Array of Paths according to the driver datra
 
-    tempOriginState.map((coordinate, coordinateIndex) => {
-      if (coordinateIndex) {
-        calculatePath(
-          route,
-          coordinateIndex,
-          distanceMatrix,
-          timeMatrix,
-          riderMatrix
-        );
-      }
-      console.log(coordinateIndex);
-    });
+    // tempOriginState.map((coordinate, coordinateIndex) => {
+    //   if (coordinateIndex) {
+    //     calculatePath(
+    //       route,
+    //       coordinateIndex,
+    //       distanceMatrix,
+    //       timeMatrix,
+    //       riderMatrix
+    //     );
+    //   }
+    //   console.log(coordinateIndex);
+    // });
+
+    const newRoute = await worker.current.clusteringSW(
+      tempOriginState,
+      route,
+      distanceMatrix,
+      timeMatrix,
+      riderMatrix
+    );
+
+    console.log(newRoute);
 
     // Now we need to convert the Node into the coordinates
     const tempPath = ps.indexToCoordinate(
       tempOriginState,
-      route,
+      newRoute,
       paths,
       tempHub
     );
 
     // Set the path
     setPaths(tempPath);
+
+    setLoadingState("Plotting Paths ...");
 
     const roadSteps = [];
     tempPath.map(() => roadSteps.push([]));
@@ -234,6 +278,8 @@ export default function Home() {
       routeNo,
       plot
     );
+
+    setLoadingState("");
     // roadPoints.push(ps.roadPoints(path, tempPathSteps.steps));
     // ps.getRoadPointsDuration(tempPathSteps.steps, roadPoints);
   };
@@ -343,6 +389,7 @@ export default function Home() {
     setPathArray([]);
     setHasExtracted(true);
 
+    setLoadingState("Extracting data ...");
     map.current = null;
 
     // SET OF ORIGINS / PICKUPS
@@ -354,6 +401,8 @@ export default function Home() {
 
     let { originGeoInfo, destGeoInfo, hubGeoInfo } =
       await pds.batchGeoCoordinates(origin, dest);
+
+    setLoadingState("Extracting GeoCoordinates From Addresses ...");
 
     if (updatedOrigins) {
       originGeoInfo = updatedOrigins;
@@ -372,6 +421,8 @@ export default function Home() {
       center: ps.getAverageCoordinates(originGeoInfo, destGeoInfo),
       zoom: 11,
     });
+
+    setOriginState("Plotting points ...");
 
     console.log([
       ...new Set(
@@ -393,6 +444,8 @@ export default function Home() {
     plot.setTraffic(map);
 
     console.log(tempOriginState);
+
+    setLoadingState("Getting Distance Matrix ...");
 
     const { distanceMatrix, timeMatrix } = await OPS.batchDistanceMatrix(
       tempOriginState,
@@ -678,6 +731,7 @@ export default function Home() {
           <></>
         )}
         <Typography order={5}>Visualizer</Typography>
+        <Typography order={5}>{loadingState}</Typography>
         <div ref={mapContainer} className="map-container h-[50vh]"></div>
         <Typography order={5}>
           Total {deliveryCount} deliveries simulated

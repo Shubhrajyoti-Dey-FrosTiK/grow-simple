@@ -14,6 +14,7 @@ export default class OptimizedPlottingService {
 
   async getRoute(riderPath, route, roadSteps, routeNo) {
     let pointsArray = [];
+    let radiusArray = [];
 
     if (riderPath.length < 2) {
       if (!riderPath.length) return;
@@ -28,16 +29,19 @@ export default class OptimizedPlottingService {
     }
 
     // Joining the latitude and longitude
-    riderPath.forEach((point) =>
-      pointsArray.push(`${point.longitude},${point.latitude}`)
-    );
+    // Joining the latitude and longitude
+    riderPath.forEach((point) => {
+      pointsArray.push(`${point.longitude},${point.latitude}`);
+      radiusArray.push("unlimited");
+    });
 
     const URL = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${pointsArray.join(
       ";"
-    )}?alternatives=true&geometries=geojson&language=en&overview=simplified&steps=true&access_token=${
+    )}?radiuses=${radiusArray.join(
+      ";"
+    )}&alternatives=true&geometries=geojson&language=en&overview=simplified&steps=true&access_token=${
       mapboxgl.accessToken
     }`;
-
     const query = await fetch(URL, { method: "GET" });
     const json = await query.json();
 
@@ -49,6 +53,16 @@ export default class OptimizedPlottingService {
     // This duration will include all the legs
     let duration = 0;
     let tempRoadSteps = [];
+
+    if (!data) {
+      roadSteps[routeNo].push([
+        {
+          latitude: riderPath[0].longitude,
+          longitude: riderPath[0].latitude,
+        },
+      ]);
+      return;
+    }
 
     data.legs.forEach((leg) => {
       const legCoordinates = [];

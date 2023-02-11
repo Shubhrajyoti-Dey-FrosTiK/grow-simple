@@ -117,14 +117,19 @@ export default class PlottingService {
 
     if (riderPath.length < 2) return;
 
+    const radiusArray = [];
+
     // Joining the latitude and longitude
-    riderPath.forEach((point) =>
-      pointsArray.push(`${point.longitude},${point.latitude}`)
-    );
+    riderPath.forEach((point) => {
+      pointsArray.push(`${point.longitude},${point.latitude}`);
+      radiusArray.push(100);
+    });
 
     const URL = `https://api.mapbox.com/directions/v5/mapbox/driving-traffic/${pointsArray.join(
       ";"
-    )}?alternatives=true&geometries=geojson&language=en&overview=simplified&steps=true&access_token=${
+    )}?radiuses=${radiusArray.join(
+      ";"
+    )}&alternatives=true&geometries=geojson&language=en&overview=simplified&steps=true&access_token=${
       mapboxgl.accessToken
     }`;
 
