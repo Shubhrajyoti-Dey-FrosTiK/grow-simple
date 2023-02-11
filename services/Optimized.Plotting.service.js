@@ -48,8 +48,6 @@ export default class OptimizedPlottingService {
     // Capture the path which is the most recommended
     const data = json.routes[0];
 
-    console.log(json);
-
     // This duration will include all the legs
     let duration = 0;
     let tempRoadSteps = [];
@@ -59,6 +57,14 @@ export default class OptimizedPlottingService {
         {
           latitude: riderPath[0].longitude,
           longitude: riderPath[0].latitude,
+          distance: 0,
+          duration: 0,
+        },
+        {
+          latitude: riderPath[riderPath.length - 1].longitude,
+          longitude: riderPath[riderPath.length - 1].latitude,
+          distance: 20,
+          duration: 50,
         },
       ]);
       return;
@@ -67,6 +73,7 @@ export default class OptimizedPlottingService {
     data.legs.forEach((leg) => {
       const legCoordinates = [];
       let legDuration = 0;
+      let legDistance = 0;
 
       leg.steps.forEach((step) => {
         let stepDistance = 0;
@@ -94,10 +101,12 @@ export default class OptimizedPlottingService {
             duration:
               legDuration +
               (stepDistance / (step.distance + 1)) * step.duration,
+            distance: legDistance + stepDistance,
           });
         });
 
         legDuration += step.duration;
+        legDistance += step.distance;
       });
 
       tempRoadSteps.push(legCoordinates);

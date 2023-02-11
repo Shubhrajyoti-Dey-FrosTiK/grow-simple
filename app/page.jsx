@@ -244,8 +244,6 @@ export default function Home() {
       riderMatrix
     );
 
-    console.log(newRoute);
-
     // Now we need to convert the Node into the coordinates
     const tempPath = ps.indexToCoordinate(
       tempOriginState,
@@ -329,9 +327,10 @@ export default function Home() {
       roadPoints.push(tempRoadPoints);
     });
 
+    console.log(roadPoints, paths);
     // Calculating the time for n deliveries
     const nthDeliveryTime = {
-      duration: simulateHours * 60,
+      duration: simulateHours * 60 * 60,
     };
 
     setDeliveryCount(deliveryCount + simulateDeliveries);
@@ -422,13 +421,7 @@ export default function Home() {
       zoom: 11,
     });
 
-    setOriginState("Plotting points ...");
-
-    console.log([
-      ...new Set(
-        [tempHub, ...originGeoInfo, ...destGeoInfo].map((item) => item)
-      ),
-    ]);
+    setLoadingState("Plotting points ...");
 
     map.current.addControl(new mapboxgl.FullscreenControl());
 
@@ -447,12 +440,12 @@ export default function Home() {
 
     setLoadingState("Getting Distance Matrix ...");
 
+    console.log(tempOriginState);
+
     const { distanceMatrix, timeMatrix } = await OPS.batchDistanceMatrix(
       tempOriginState,
       tempOriginState
     );
-
-    console.log(distanceMatrix, timeMatrix);
 
     initialRequest(distanceMatrix, timeMatrix, originGeoInfo, tempOriginState);
 
@@ -766,7 +759,7 @@ export default function Home() {
 
             <TextInput
               value={simulateHours}
-              onChange={(e) => setSimulateHours(Number(e.target.value))}
+              onChange={(e) => setSimulateHours(Number(Number(e.target.value)))}
               type="number"
               label="Simulate no of hours you want to simulate"
               className="mt-3"

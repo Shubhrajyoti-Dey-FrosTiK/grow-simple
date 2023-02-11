@@ -54,12 +54,6 @@ export default class OptimizedPathService {
       });
     });
 
-    console.log(
-      process.env.NEXT_PUBLIC_DISTANCE_MATRIX_API +
-        "?json=" +
-        JSON.stringify(payload)
-    );
-
     const distanceMatrixResponse = await axios.post(
       process.env.NEXT_PUBLIC_DISTANCE_MATRIX_API +
         "?json=" +
